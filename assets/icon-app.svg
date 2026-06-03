@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <defs>
+    <clipPath id="app-clip"><rect width="192" height="192" rx="42"></rect></clipPath>
+  </defs>
+  <g clip-path="url(#app-clip)">
+    
+    <rect width="192" height="192" fill="#FEFCF9"></rect>
+    
+    <rect x="0" y="0" width="192" height="192" rx="42" fill="none" stroke="#D4C5B0" stroke-width="1.5"></rect>
+
+    
+    <text x="96" y="52" text-anchor="middle" font-family="&#39;Montserrat&#39;, sans-serif" font-weight="600" font-size="10" letter-spacing="3" fill="#80735D">CONSERVATOIRE</text>
+    <line x1="42" y1="60" x2="150" y2="60" stroke="#D4C5B0" stroke-width="1"></line>
+
+    
+    <text x="96" y="112" text-anchor="middle" font-family="&#39;Montserrat&#39;, sans-serif" font-weight="800" font-size="44" fill="#2D1318" letter-spacing="-2">Pédago</text>
+    <text x="96" y="150" text-anchor="middle" font-family="&#39;Montserrat&#39;, sans-serif" font-weight="700" font-style="italic" font-size="44" fill="#9D0C15" letter-spacing="-1.2">Lab</text>
+  </g>
+</svg>

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="140" height="50" viewBox="0 0 140 50">
+  <g transform="rotate(-5 70 25)" opacity="0.85">
+    <rect x="10" y="8" width="120" height="34" rx="4" fill="none" stroke="#9D0C15" stroke-width="2.5"></rect>
+    <text x="70" y="31" text-anchor="middle" font-family="Montserrat, sans-serif" font-weight="800" font-size="16" letter-spacing="3" fill="#9D0C15">VALIDÉE</text>
+  </g>
+</svg>

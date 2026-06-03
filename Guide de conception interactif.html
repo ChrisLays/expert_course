@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Guide de conception — CNSMDP Learning Lab</title>
+<link rel="stylesheet" href="assets/tokens.css" />
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { background: var(--cnsm-sand); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+  #root { min-height: 100vh; }
+  button { font-family: inherit; }
+  ::selection { background: rgba(157,12,21,0.16); }
+
+  /* scrollbars — warm + quiet */
+  main::-webkit-scrollbar, nav::-webkit-scrollbar { width: 10px; }
+  main::-webkit-scrollbar-thumb, nav::-webkit-scrollbar-thumb { background: var(--cnsm-track); border-radius: 9999px; border: 3px solid transparent; background-clip: padding-box; }
+  main::-webkit-scrollbar-track, nav::-webkit-scrollbar-track { background: transparent; }
+
+  b, strong { font-weight: 700; color: var(--cnsm-dark); }
+  i, em { font-style: italic; }
+
+  /* bold/emphasis on dark flip-card backs must stay legible */
+  .flip-back-body b, .flip-back-body strong { color: #F4D9B5; }
+  .flip-back-body i, .flip-back-body em { color: #E8DFD0; }
+
+  /* hide scrollbar on flip-card backs (still scrollable if needed) */
+  .no-sb { scrollbar-width: none; -ms-overflow-style: none; }
+  .no-sb::-webkit-scrollbar { width: 0; height: 0; display: none; }
+
+  /* inline code in instructions/feedback/markdown preview */
+  .sandbox-instruction code, .sandbox-feedback code, .md-rendered code {
+    font-family: var(--font-mono); font-size: 0.86em; padding: 1px 6px; border-radius: 5px;
+    background: var(--cnsm-sand); color: var(--cnsm-red); border: 1px solid var(--cnsm-warm-border);
+  }
+  .sandbox-feedback code { background: rgba(21,128,61,0.08); color: #15803D; border-color: rgba(34,197,94,0.3); }
+
+  /* live markdown preview rendering */
+  .md-rendered { font-family: 'Montserrat', sans-serif; color: var(--cnsm-leather); }
+  .md-rendered > :first-child { margin-top: 0; }
+  .md-rendered h1 { font-size: 22px; font-weight: 800; color: var(--cnsm-dark); letter-spacing: -0.02em; margin: 4px 0 8px; line-height: 1.2; }
+  .md-rendered h2 { font-size: 18px; font-weight: 700; color: var(--cnsm-dark); margin: 12px 0 6px; }
+  .md-rendered h3 { font-size: 15.5px; font-weight: 700; color: var(--cnsm-brown-dark); margin: 10px 0 5px; }
+  .md-rendered h4, .md-rendered h5, .md-rendered h6 { font-size: 14px; font-weight: 700; color: var(--cnsm-brown-dark); margin: 8px 0 4px; }
+  .md-rendered p { font-size: 14px; line-height: 1.6; margin: 8px 0; }
+  .md-rendered ul, .md-rendered ol { font-size: 14px; line-height: 1.6; margin: 8px 0; padding-left: 22px; }
+  .md-rendered li { margin: 3px 0; }
+  .md-rendered ul li::marker { color: var(--cnsm-red); }
+  .md-rendered ol li::marker { color: var(--cnsm-red); font-weight: 700; }
+  .md-rendered blockquote { margin: 10px 0; padding: 6px 14px; border-left: 3px solid var(--cnsm-amber);
+    background: var(--cnsm-sand); color: var(--cnsm-brown-dark); font-style: italic; border-radius: 0 8px 8px 0; }
+  .md-rendered a { color: #2A6FB0; text-decoration: underline; text-decoration-color: rgba(42,111,176,0.4); }
+  .md-rendered hr { border: none; border-top: 1px solid var(--cnsm-warm-border); margin: 12px 0; }
+  .md-rendered .md-img { display: inline-block; padding: 4px 10px; border-radius: 8px; background: var(--cnsm-sand);
+    border: 1px dashed var(--cnsm-warm-border); color: var(--cnsm-brown); font-size: 13px; }
+  .md-rendered strong { color: var(--cnsm-dark); }
+  .md-rendered em { font-style: italic; }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @keyframes slideIn { from { transform: translateX(-100%); } to { transform: none; } }
+
+  /* number inputs in fill-in: hide spinners */
+  input[type=number].no-spin::-webkit-outer-spin-button,
+  input[type=number].no-spin::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+  /* range slider — branded */
+  .cnsm-range { -webkit-appearance: none; appearance: none; height: 8px; border-radius: 9999px;
+    background: var(--cnsm-track); outline: none; }
+  .cnsm-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 24px; height: 24px;
+    border-radius: 50%; background: var(--cnsm-red); cursor: pointer; border: 3px solid #FEFCF9;
+    box-shadow: 0 2px 8px rgba(157,12,21,0.35); }
+  .cnsm-range::-moz-range-thumb { width: 24px; height: 24px; border-radius: 50%; background: var(--cnsm-red);
+    cursor: pointer; border: 3px solid #FEFCF9; box-shadow: 0 2px 8px rgba(157,12,21,0.35); }
+
+  /* responsive */
+  @media (max-width: 920px) {
+    .cover-right { display: none !important; }
+  }
+  @media (max-width: 720px) {
+    .md-studio-split { grid-template-columns: 1fr !important; }
+    .md-studio-split > div:first-child { border-right: none !important; border-bottom: 1px solid var(--cnsm-warm-border) !important; }
+  }
+  @media (max-width: 860px) {
+    .sidebar-desktop { display: none !important; }
+    .menu-btn { display: inline-flex !important; }
+    .topbar-title { display: none !important; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+</style>
+</head>
+<body>
+<template id="__bundler_thumbnail" data-bg-color="#F5F0E8">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#F5F0E8"/>
+    <rect x="360" y="250" width="480" height="300" rx="24" fill="#FEFCF9" stroke="#D4C5B0" stroke-width="2"/>
+    <text x="600" y="430" font-family="Montserrat, sans-serif" font-size="150" font-weight="800" fill="#9D0C15" text-anchor="middle" letter-spacing="-6">M↓</text>
+    <text x="600" y="510" font-family="Montserrat, sans-serif" font-size="26" font-weight="700" fill="#1A1A1A" text-anchor="middle" letter-spacing="2">CONSERVATOIRE DE PARIS</text>
+  </svg>
+</template>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script src="content.js"></script>
+<script src="image-slot.js"></script>
+<script type="text/babel" src="components.jsx"></script>
+<script type="text/babel" src="interactions.jsx"></script>
+<script type="text/babel" src="sandbox.jsx"></script>
+<script type="text/babel" src="chapters.jsx"></script>
+<script type="text/babel" src="app.jsx"></script>
+</body>
+</html>
