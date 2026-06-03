@@ -61,7 +61,7 @@ function ChAsynchrone({ c, lang, t, onQuiz }) {
 }
 
 // ── CH 3 ────────────────────────────────────────────────────────
-function ChLivrables({ c, lang, t }) {
+function ChLivrables({ c, lang, t, gate }) {
   return React.createElement('div', { style: { display: 'flex', flexDirection: 'column' } },
     React.createElement(Lead, { html: t(c.lead) }),
     React.createElement('div', { style: { margin: '30px 0' } }, React.createElement(FlipCardGrid, { cards: c.cards, lang })),
@@ -70,13 +70,13 @@ function ChLivrables({ c, lang, t }) {
     React.createElement(H2, null, t(c.simTitle)),
     React.createElement(P, { html: t(c.simBody) }),
     React.createElement('div', { style: { margin: '24px 0' } }, React.createElement(WordSimulator, { lang })),
-    React.createElement('div', { style: { margin: '24px 0' } }, React.createElement(WordFillIn, { data: c.fillin, lang })),
+    React.createElement('div', { style: { margin: '24px 0' } }, React.createElement(WordFillIn, { data: c.fillin, lang, onComplete: gate })),
     React.createElement('div', { style: { margin: '28px 0 0' } }, React.createElement(Callout, { kind: c.callout2.kind, title: t(c.callout2.title) }, React.createElement(RichText, { html: t(c.callout2.body) })))
   );
 }
 
 // ── CH 4 ────────────────────────────────────────────────────────
-function ChEquipe({ c, lang, t }) {
+function ChEquipe({ c, lang, t, gate }) {
   return React.createElement('div', { style: { display: 'flex', flexDirection: 'column' } },
     React.createElement(Lead, { html: t(c.lead) }),
     React.createElement('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px,1fr))', gap: 18, margin: '32px 0 10px' } },
@@ -89,12 +89,14 @@ function ChEquipe({ c, lang, t }) {
         )
       ))
     ),
-    React.createElement('div', { style: { margin: '30px 0 0' } }, React.createElement(Callout, { kind: c.callout1.kind, title: t(c.callout1.title) }, React.createElement(RichText, { html: t(c.callout1.body) })))
+    React.createElement('div', { style: { margin: '30px 0 0' } }, React.createElement(Callout, { kind: c.callout1.kind, title: t(c.callout1.title) }, React.createElement(RichText, { html: t(c.callout1.body) }))),
+    React.createElement(Divider, null),
+    React.createElement(Quiz, { data: c.quiz, lang, label: 'Quiz', onAnswered: gate })
   );
 }
 
 // ── CH 5 ────────────────────────────────────────────────────────
-function ChEtapes({ c, lang, t }) {
+function ChEtapes({ c, lang, t, gate }) {
   return React.createElement('div', { style: { display: 'flex', flexDirection: 'column' } },
     React.createElement(Lead, { html: t(c.lead) }),
     React.createElement('div', { style: { display: 'flex', gap: 16, flexWrap: 'wrap', margin: '14px 0 22px' } },
@@ -104,12 +106,14 @@ function ChEtapes({ c, lang, t }) {
     ),
     React.createElement(EscalesJourney, { steps: c.steps, lang }),
     React.createElement('div', { style: { margin: '24px 0 18px' } }, React.createElement(WorkloadBars, { data: c.workload, lang })),
-    React.createElement(Callout, { kind: c.callout1.kind, title: t(c.callout1.title) }, React.createElement(RichText, { html: t(c.callout1.body) }))
+    React.createElement(Callout, { kind: c.callout1.kind, title: t(c.callout1.title) }, React.createElement(RichText, { html: t(c.callout1.body) })),
+    React.createElement(Divider, null),
+    React.createElement(Quiz, { data: c.quiz, lang, label: 'Quiz', onAnswered: gate })
   );
 }
 
 // ── CH ATELIER (5b) ─────────────────────────────────────────────
-function ChAtelier({ c, lang, t }) {
+function ChAtelier({ c, lang, t, gate }) {
   const ownerColors = [CNSM.red, CNSM.amber, CNSM.brownDark];
   return React.createElement('div', { style: { display: 'flex', flexDirection: 'column' } },
     React.createElement(Lead, { html: t(c.lead) }),
@@ -176,7 +180,7 @@ function ChAtelier({ c, lang, t }) {
     // hands-on sandbox exercise
     React.createElement(Divider, null),
     React.createElement('div', { style: { marginTop: 14 } },
-      React.createElement(MarkdownSandbox, { data: c.sandbox, lang, onOpenTool: c.toolUrl })
+      React.createElement(MarkdownSandbox, { data: c.sandbox, lang, onOpenTool: c.toolUrl, onDone: gate })
     ),
     // closing CTA
     React.createElement('div', { style: { display: 'flex', justifyContent: 'center', marginTop: 34 } },
@@ -193,7 +197,7 @@ function ChAtelier({ c, lang, t }) {
 }
 
 // ── CH 6 ────────────────────────────────────────────────────────
-function ChVigilance({ c, lang, t, checklist, setChecklist }) {
+function ChVigilance({ c, lang, t, checklist, setChecklist, gate }) {
   return React.createElement('div', { style: { display: 'flex', flexDirection: 'column' } },
     React.createElement(Lead, { html: t(c.lead) }),
     React.createElement('div', { style: { background: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 16, padding: '20px 22px', margin: '28px 0 10px' } },
@@ -214,16 +218,17 @@ function ChVigilance({ c, lang, t, checklist, setChecklist }) {
     React.createElement(Divider, null),
     React.createElement(H2, null, t(c.checklistTitle)),
     React.createElement('div', { style: { margin: '8px 0' } },
-      React.createElement(Checklist, { items: t(c.checklist), lang, doneMsg: t(c.checklistDone), value: checklist, onChange: setChecklist })
+      React.createElement(Checklist, { items: t(c.checklist), lang, doneMsg: t(c.checklistDone), value: checklist, onChange: setChecklist, onAllDone: gate })
     )
   );
 }
 
 // ── CH 7 ────────────────────────────────────────────────────────
-function ChCampus({ c, lang, t, onFinish }) {
+function ChCampus({ c, lang, t, onFinish, gate }) {
   const [scores, setScores] = React.useState({});
   const answered = Object.keys(scores).length;
   const good = Object.values(scores).filter(Boolean).length;
+  React.useEffect(() => { if (answered === c.recap.length && gate) gate(); }, [answered]);
   return React.createElement('div', { style: { display: 'flex', flexDirection: 'column' } },
     React.createElement(Lead, { html: t(c.lead) }),
     React.createElement('a', {

@@ -12,7 +12,7 @@ window.COURSE = {
     start: { fr: "Commencer le parcours", en: "Start the journey" },
     resume: { fr: "Reprendre où j'en étais", en: "Resume where I left off" },
     chaptersLabel: { fr: "8 chapitres", en: "8 chapters" },
-    minutesLabel: { fr: "≈ 25 min de lecture", en: "≈ 25 min read" },
+    minutesLabel: { fr: "≈ 10–15 min de lecture", en: "≈ 10–15 min read" },
     intro: {
       fr: "Vous allez concevoir un cours en ligne avec nous. Ce guide explique comment nous travaillons ensemble : ce que vous apportez, ce que nous prenons en charge, et comment nous transformons votre matière en un véritable parcours d'apprentissage.",
       en: "You are about to design an online course with us. This guide explains how we work together: what you bring, what we take care of, and how we turn your material into a genuine learning journey."
@@ -127,8 +127,8 @@ window.COURSE = {
         badge: { fr: "À vous de chercher", en: "Your turn to research" },
         title: { fr: "Partez en exploration", en: "Go exploring" },
         intro: {
-          fr: "Avant d'aller plus loin, cherchez en ligne des <b>ressources pédagogiques interactives</b> que vous avez appréciées (un cours, un module, une expérience interactive…). Pour chacune, indiquez son nom, un lien si possible, et <b>ce qui vous a plu</b>. <b>Au moins une réponse est nécessaire</b> pour continuer ; les trois sont les bienvenues.",
-          en: "Before going further, search online for <b>interactive learning resources</b> you have enjoyed (a course, a module, an interactive experience…). For each, give its name, a link if possible, and <b>what you liked</b> about it. <b>At least one answer is required</b> to continue; all three are welcome."
+          fr: "Avant d'aller plus loin, cherchez en ligne des <b>ressources pédagogiques interactives</b> que vous avez appréciées (un cours, un module, une expérience interactive…). Pour chacune, indiquez son nom, un lien si possible, et <b>ce qui vous a plu</b>. C'est un exercice de réflexion — notez-en au moins une, les trois sont les bienvenues.",
+          en: "Before going further, search online for <b>interactive learning resources</b> you have enjoyed (a course, a module, an interactive experience…). For each, give its name, a link if possible, and <b>what you liked</b> about it. This is a reflection exercise — jot down at least one; all three are welcome."
         },
         placeholders: {
           fr: [
@@ -143,8 +143,8 @@ window.COURSE = {
           ]
         },
         progress: { fr: "ressource(s) renseignée(s)", en: "resource(s) filled in" },
-        lockedHint: { fr: "Renseignez au moins une ressource pour débloquer le chapitre suivant.", en: "Fill in at least one resource to unlock the next chapter." },
-        success: { fr: "Bravo — votre inspiration est notée. Le chapitre suivant est débloqué.", en: "Well done — your inspiration is saved. The next chapter is unlocked." }
+        lockedHint: { fr: "Notez au moins une ressource qui vous a inspiré·e.", en: "Jot down at least one resource that inspired you." },
+        success: { fr: "Bravo — votre inspiration est notée.", en: "Well done — your inspiration is saved." }
       }
     },
 
@@ -324,6 +324,15 @@ window.COURSE = {
           fr: "Toute la production technique — intégration, graphisme, illustrations, montage, postproduction — est prise en charge par notre équipe : <b>3 à 5 mois de travail</b> de notre côté.",
           en: "All the technical production — integration, graphic design, illustrations, editing, post-production — is handled by our team: <b>3 to 5 months of work</b> on our side."
         }
+      },
+      quiz: {
+        q: { fr: "Qui se charge de redécouper vos chapitres en leçons courtes adaptées à l'écran ?", en: "Who is in charge of re-segmenting your chapters into short, screen-friendly lessons?" },
+        options: {
+          fr: ["Vous, avant même de rédiger", "L'équipe d'ingénierie pédagogique", "Les apprenant·es, à leur rythme"],
+          en: ["You, before you even write", "The learning-engineering team", "The learners, at their own pace"]
+        },
+        answer: 1,
+        explain: { fr: "Vous raisonnez en parties et chapitres ; ce sont les ingénieur·es pédagogiques qui re-segmentent vos chapitres en leçons de 15 à 20 min adaptées à l'écran.", en: "You think in parts and chapters; it is the learning engineers who re-segment your chapters into 15–20 min lessons suited to the screen." }
       }
     },
 
@@ -359,7 +368,16 @@ window.COURSE = {
         { label: { fr: "Validation quiz", en: "Quiz validation" }, h: 3 },
         { label: { fr: "Tournage", en: "Filming" }, h: 4 },
         { label: { fr: "Validation finale", en: "Final validation" }, h: 3 }
-      ]
+      ],
+      quiz: {
+        q: { fr: "Quand vaut-il mieux nous envoyer votre première partie rédigée ?", en: "When is it best to send us your first written part?" },
+        options: {
+          fr: ["Une fois le cours entièrement terminé", "Dès qu'elle est prête, même imparfaite", "Seulement après le tournage"],
+          en: ["Once the whole course is finished", "As soon as it is ready, even imperfect", "Only after filming"]
+        },
+        answer: 1,
+        explain: { fr: "Envoyer tôt, même imparfait, est le meilleur moyen de caler ensemble le niveau de détail attendu avant de rédiger la suite.", en: "Sending it early, even imperfect, is the best way to calibrate the expected level of detail together before writing the rest." }
+      }
     },
 
     // 5b ─ NEW: Atelier de rédaction ─────────────────────────────

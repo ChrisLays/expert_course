@@ -1,4 +1,5 @@
-# exports & work files — not needed for hosting
 screenshots/
+uploads/
 *.napkin
-Guide de conception — autonome.html
+Guide de conception - autonome.html
+.image-slots.state.json

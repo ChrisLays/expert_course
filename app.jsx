@@ -16,6 +16,7 @@ function App() {
   const [completed, setCompleted] = React.useState(init.completed || []);
   const [checklist, setChecklist] = React.useState(init.checklist || {});
   const [resources, setResources] = React.useState(init.resources || ['', '', '']);
+  const [passed, setPassed] = React.useState(init.passed || []); // chapter indices whose exercise is answered
   const [drawer, setDrawer] = React.useState(false);
   const [scrollPct, setScrollPct] = React.useState(0);
   const scrollRef = React.useRef(null);
@@ -23,7 +24,7 @@ function App() {
   const nav = COURSE.nav;
   const totalCh = nav.length;
 
-  React.useEffect(() => { saveState({ lang, view, completed, checklist, resources }); }, [lang, view, completed, checklist, resources]);
+  React.useEffect(() => { saveState({ lang, view, completed, checklist, resources, passed }); }, [lang, view, completed, checklist, resources, passed]);
 
   // reset scroll on chapter change
   React.useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = 0; setScrollPct(0); }, [view]);
@@ -31,9 +32,10 @@ function App() {
   const markComplete = (idx) => setCompleted((c) => (c.includes(idx) ? c : [...c, idx]));
 
   const goTo = (v) => { setView(v); setDrawer(false); };
-  // gate: chapter 0 requires the 3 resources before advancing
-  const resourcesDone = resources.filter((r) => (r || '').trim().length >= 8).length >= 1;
-  const gateOk = (idx) => (idx === 0 ? resourcesDone : true);
+  // gate: every chapter requires its exercise to be answered before advancing.
+  // `passed` is sticky + persisted, so a chapter stays unlocked after reload.
+  const markPassed = (idx) => { setPassed((p) => (p.includes(idx) ? p : [...p, idx])); markComplete(idx); };
+  const gateOk = (idx) => passed.includes(idx);
   const nextLocked = typeof view === 'number' && !gateOk(view);
   const goNext = () => {
     if (typeof view === 'number') {
@@ -49,7 +51,6 @@ function App() {
     const max = el.scrollHeight - el.clientHeight;
     const pct = max > 0 ? (el.scrollTop / max) * 100 : 100;
     setScrollPct(pct);
-    if (pct > 88 && typeof view === 'number') markComplete(view);
   };
 
   // ── Wordmark ──
@@ -74,7 +75,7 @@ function App() {
       React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '18px clamp(20px,5vw,56px)', borderBottom: `1px solid ${CNSM.warmBorder}` } },
         React.createElement(Wordmark, null), React.createElement(LangToggle, null)),
       React.createElement('div', { style: { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'clamp(28px,6vw,72px) clamp(20px,5vw,56px)' } },
-        React.createElement('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(0,1.15fr) minmax(0,0.85fr)', gap: 'clamp(28px,5vw,64px)', maxWidth: 1140, width: '100%', alignItems: 'center' } },
+        React.createElement('div', { className: 'cover-grid', style: { display: 'grid', gridTemplateColumns: 'minmax(0,1.15fr) minmax(0,0.85fr)', gap: 'clamp(28px,5vw,64px)', maxWidth: 1140, width: '100%', alignItems: 'center' } },
           // left
           React.createElement('div', { className: 'cover-left' },
             React.createElement('div', { style: { fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.28em', textTransform: 'uppercase', color: CNSM.red, marginBottom: 18 } }, t(m.kicker)),
@@ -144,7 +145,7 @@ function App() {
         const blocked = nextLocked && i > view;
         return React.createElement('button', {
           key: item.id, onClick: () => { if (!blocked) goTo(i); }, disabled: blocked,
-          title: blocked ? t({ fr: 'Complétez l’exercice du chapitre 1 pour continuer', en: 'Complete chapter 1’s exercise to continue' }) : undefined,
+          title: blocked ? t({ fr: 'Répondez à l’exercice de ce chapitre pour continuer', en: 'Answer this chapter’s exercise to continue' }) : undefined,
           style: {
             display: 'flex', alignItems: 'center', gap: 12, width: '100%', textAlign: 'left', cursor: blocked ? 'not-allowed' : 'pointer',
             padding: '11px 12px', borderRadius: 10, marginBottom: 2, opacity: blocked ? 0.45 : 1,
@@ -201,7 +202,7 @@ function App() {
             React.createElement('h1', { style: { fontFamily: 'Montserrat', fontWeight: 800, fontSize: 'clamp(28px,3.4vw,38px)', lineHeight: 1.12, letterSpacing: '-0.025em', color: CNSM.dark, margin: 0 } }, t(cdata.title))
           ),
           // chapter body
-          React.createElement(Renderer, { c: cdata, lang, t, checklist, setChecklist, resources, setResources, onQuiz: () => markComplete(view), onFinish: () => { markComplete(view); goTo('cover'); } }),
+          React.createElement(Renderer, { c: cdata, lang, t, checklist, setChecklist, resources, setResources, gate: () => markPassed(view), onQuiz: () => markPassed(view), onFinish: () => { markPassed(view); goTo('cover'); } }),
           // footer nav
           React.createElement('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginTop: 60, paddingTop: 32, borderTop: `1px solid ${CNSM.warmBorder}` } },
             view > 0

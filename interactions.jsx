@@ -245,7 +245,7 @@ function WordSimulator({ lang }) {
 }
 
 // ── 4b. Fill-in: enter duration → words ─────────────────────────
-function WordFillIn({ data, lang }) {
+function WordFillIn({ data, lang, onComplete }) {
   const t = (o) => (o && typeof o === 'object' && ('fr' in o || 'en' in o) ? o[lang] : o);
   const [hrs, setHrs] = React.useState('');
   const [mins, setMins] = React.useState('');
@@ -253,6 +253,7 @@ function WordFillIn({ data, lang }) {
   const m = Math.max(0, parseInt(mins, 10) || 0);
   const totalMin = h * 60 + m;
   const has = totalMin > 0;
+  React.useEffect(() => { if (has && onComplete) onComplete(); }, [has]);
   const lo = Math.round(totalMin * 90);
   const hi = Math.round(totalMin * 120);
   const fmt = (n) => n.toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-US');
@@ -376,13 +377,14 @@ function WorkloadBars({ data, lang }) {
 }
 
 // ── 6. Checklist (persisted) ────────────────────────────────────
-function Checklist({ items, lang, doneMsg, value, onChange }) {
+function Checklist({ items, lang, doneMsg, value, onChange, onAllDone }) {
   const toggle = (i) => {
     const next = { ...value, [i]: !value[i] };
     onChange(next);
   };
   const doneCount = items.filter((_, i) => value[i]).length;
   const allDone = doneCount === items.length;
+  React.useEffect(() => { if (allDone && onAllDone) onAllDone(); }, [allDone]);
   return React.createElement('div', null,
     React.createElement('div', { style: { display: 'grid', gap: 8 } },
       items.map((label, i) => {

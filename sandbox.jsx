@@ -36,10 +36,10 @@ function mdToHtml(src) {
     if (h) { html += `<h${h[1].length}>${mdInline(h[2])}</h${h[1].length}>`; i++; continue; }
     // hr
     if (/^\s*---+\s*$/.test(ln)) { html += '<hr/>'; i++; continue; }
-    // blockquote (consecutive)
-    if (/^>\s?/.test(ln)) {
+    // blockquote (consecutive) — note: mdEscape() already turned '>' into '&gt;'
+    if (/^&gt;\s?/.test(ln)) {
       let buf = [];
-      while (i < lines.length && /^>\s?/.test(lines[i])) { buf.push(mdInline(lines[i].replace(/^>\s?/, ''))); i++; }
+      while (i < lines.length && /^&gt;\s?/.test(lines[i])) { buf.push(mdInline(lines[i].replace(/^&gt;\s?/, ''))); i++; }
       html += `<blockquote>${buf.join('<br/>')}</blockquote>`; continue;
     }
     // unordered list
@@ -58,7 +58,7 @@ function mdToHtml(src) {
     if (/^\s*$/.test(ln)) { i++; continue; }
     // paragraph (gather consecutive non-empty, non-block lines)
     let buf = [];
-    while (i < lines.length && !/^\s*$/.test(lines[i]) && !/^(#{1,6})\s/.test(lines[i]) && !/^>\s?/.test(lines[i]) && !/^[-*+]\s+\S/.test(lines[i]) && !/^\d+\.\s+\S/.test(lines[i]) && !/^\s*---+\s*$/.test(lines[i])) {
+    while (i < lines.length && !/^\s*$/.test(lines[i]) && !/^(#{1,6})\s/.test(lines[i]) && !/^&gt;\s?/.test(lines[i]) && !/^[-*+]\s+\S/.test(lines[i]) && !/^\d+\.\s+\S/.test(lines[i]) && !/^\s*---+\s*$/.test(lines[i])) {
       buf.push(mdInline(lines[i])); i++;
     }
     html += `<p>${buf.join('<br/>')}</p>`;
@@ -96,7 +96,7 @@ const SB_KEY = 'cnsmdp-md-sandbox-v1';
 function sbLoad() { try { return JSON.parse(localStorage.getItem(SB_KEY)) || {}; } catch (e) { return {}; } }
 function sbSave(o) { try { localStorage.setItem(SB_KEY, JSON.stringify(o)); } catch (e) {} }
 
-function MarkdownSandbox({ data, lang, onOpenTool }) {
+function MarkdownSandbox({ data, lang, onOpenTool, onDone }) {
   const t = (o) => (o && typeof o === 'object' && ('fr' in o || 'en' in o) ? o[lang] : o);
   const tasks = data.tasks;
   const total = tasks.length;
@@ -113,6 +113,7 @@ function MarkdownSandbox({ data, lang, onOpenTool }) {
   const [now, setNow] = React.useState(Date.now());
 
   React.useEffect(() => { sbSave({ started, step, done, startTs }); }, [started, step, done, startTs]);
+  React.useEffect(() => { if (done && onDone) onDone(); }, [done]);
   React.useEffect(() => {
     if (!started || done) return;
     const id = setInterval(() => setNow(Date.now()), 1000);
