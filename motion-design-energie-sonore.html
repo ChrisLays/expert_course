@@ -1,0 +1,949 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>L'énergie sonore dans un auditorium — Motion design · CNSMDP Learning Lab</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Share+Tech+Mono&display=swap');
+
+  :root {
+    --red: #9D0C15; --red-light: #B91C28;
+    --amber: #C69B3A; --amber-bright: #E8B84B;
+    --brown: #80735D; --brown-light: #A89B82; --brown-dark: #5C4A3A;
+    --dark: #2D1318; --leather: #3D3229; --board: #2C2420; --hall: #241D19;
+    --cream: #FAF9F5; --sand: #F5F0E8; --parchment: #FEFCF9;
+    --warm-border: #D4C5B0; --track: #DDD5C8;
+    --on-dark: #E8DFD0; --on-dark-2: #BFB3A0;
+    --mono: 'Share Tech Mono', monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--sand); color: var(--leather);
+    font-family: 'Montserrat', sans-serif; -webkit-font-smoothing: antialiased;
+    min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+  }
+  ::selection { background: rgba(157,12,21,0.16); }
+
+  header.page {
+    width: 100%; max-width: 1240px; padding: 26px clamp(16px,4vw,40px) 10px;
+    display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  }
+  .wordmark { font-weight: 800; font-size: 19px; letter-spacing: -0.025em; color: #1A1A1A; }
+  .wordmark span { font-weight: 500; margin-left: 5px; }
+  .kicker-top { font-family: var(--mono); font-size: 11px; letter-spacing: 0.26em; text-transform: uppercase; color: var(--red); }
+
+  .stage-wrap {
+    width: 100%; max-width: 1240px; padding: 8px clamp(16px,4vw,40px) 40px;
+  }
+  .frame {
+    position: relative; border-radius: 20px; overflow: hidden;
+    border: 1px solid var(--warm-border);
+    background: var(--hall);
+    box-shadow: 0 18px 50px -18px rgba(45,19,24,0.45);
+  }
+  canvas { display: block; width: 100%; height: auto; }
+
+  /* ── caption overlay ── */
+  .caption {
+    position: absolute; left: clamp(14px,2.5vw,30px); bottom: clamp(14px,2.5vw,28px);
+    max-width: min(460px, 62%);
+    background: rgba(36,27,22,0.82); backdrop-filter: blur(6px);
+    border: 1px solid rgba(212,197,176,0.22); border-radius: 14px;
+    padding: 14px 18px 15px;
+    opacity: 0; transform: translateY(10px);
+    transition: opacity 450ms ease, transform 450ms ease;
+    pointer-events: none;
+  }
+  .caption.show { opacity: 1; transform: none; }
+  .caption .ck {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.22em;
+    text-transform: uppercase; color: var(--amber-bright); margin-bottom: 6px;
+  }
+  .caption .ct { font-size: clamp(12.5px, 1.35vw, 14.5px); line-height: 1.6; color: var(--on-dark); }
+  .caption .ct b { color: #F4D9B5; font-weight: 700; }
+
+  /* ── big title overlay (intro / outro) ── */
+  .titlecard {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center; padding: 24px;
+    opacity: 0; transition: opacity 600ms ease; pointer-events: none;
+  }
+  .titlecard.show { opacity: 1; }
+  .titlecard .tk {
+    font-family: var(--mono); font-size: clamp(10px,1.1vw,12px); letter-spacing: 0.32em;
+    text-transform: uppercase; color: var(--amber-bright); margin-bottom: 16px;
+  }
+  .titlecard h1 {
+    margin: 0; font-weight: 800; font-size: clamp(26px,4.2vw,46px);
+    letter-spacing: -0.03em; line-height: 1.1; color: var(--cream);
+    text-shadow: 0 4px 30px rgba(0,0,0,0.5); max-width: 700px;
+  }
+  .titlecard p {
+    margin: 16px 0 0; font-size: clamp(13px,1.5vw,16px); color: var(--on-dark-2);
+    max-width: 540px; line-height: 1.6;
+  }
+
+  /* ── controls ── */
+  .controls {
+    margin-top: 14px; background: var(--parchment);
+    border: 1px solid var(--warm-border); border-radius: 16px;
+    padding: 12px 16px; display: flex; flex-direction: column; gap: 10px;
+  }
+  .ctl-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    border: none; cursor: pointer; border-radius: 10px;
+    font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 13.5px;
+    transition: transform 120ms ease, background 160ms ease;
+  }
+  .btn:active { transform: scale(0.96); }
+  .btn-play {
+    width: 46px; height: 46px; flex-shrink: 0; border-radius: 50%;
+    background: var(--red); color: #FEFCF9;
+    box-shadow: inset 0 0 0 1px rgba(254,252,249,0.35), 0 4px 14px -4px rgba(157,12,21,0.5);
+  }
+  .btn-play:hover { background: var(--red-light); }
+  .btn-ghost {
+    padding: 9px 14px; background: var(--sand); color: var(--brown-dark);
+    border: 1px solid var(--warm-border);
+  }
+  .btn-ghost:hover { background: #EFE8DB; }
+  .time {
+    font-family: var(--mono); font-size: 13px; color: var(--brown-dark);
+    min-width: 96px; text-align: center;
+  }
+  .scrub { flex: 1; min-width: 160px; position: relative; height: 26px; display: flex; align-items: center; cursor: pointer; }
+  .scrub .rail { position: absolute; left: 0; right: 0; height: 8px; border-radius: 9999px; background: var(--track); overflow: hidden; }
+  .scrub .fill { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(90deg, var(--red), var(--red-light)); border-radius: 9999px; }
+  .scrub .marks { position: absolute; left: 0; right: 0; height: 8px; pointer-events: none; }
+  .scrub .mark { position: absolute; top: 0; bottom: 0; width: 2px; background: rgba(254,252,249,0.75); }
+  .scrub .knob {
+    position: absolute; width: 20px; height: 20px; border-radius: 50%;
+    background: var(--red); border: 3px solid #FEFCF9; transform: translateX(-50%);
+    box-shadow: 0 2px 8px rgba(157,12,21,0.35); pointer-events: none;
+  }
+  .chips { display: flex; gap: 7px; flex-wrap: wrap; }
+  .chip {
+    border: 1px solid var(--warm-border); background: transparent; color: var(--brown);
+    border-radius: 9999px; padding: 6px 13px; cursor: pointer;
+    font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 12px;
+    transition: all 180ms ease;
+  }
+  .chip:hover { background: var(--sand); }
+  .chip.active { background: var(--dark); border-color: var(--dark); color: #FEFCF9; }
+  .chip .n { font-family: var(--mono); font-size: 10.5px; color: var(--amber); margin-right: 6px; }
+  .chip.active .n { color: var(--amber-bright); }
+
+  .footnote {
+    margin-top: 12px; font-size: 12px; color: var(--brown); line-height: 1.55;
+  }
+  .footnote code { font-family: var(--mono); font-size: 11px; background: var(--sand); border: 1px solid var(--warm-border); border-radius: 5px; padding: 1px 6px; color: var(--red); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .caption, .titlecard { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="page">
+  <div>
+    <div class="kicker-top">CNSMDP Learning Lab · Motion design</div>
+    <div class="wordmark">Conservatoire<span>de Paris</span></div>
+  </div>
+  <div style="font-family:var(--mono);font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--brown)">
+    Acoustique des salles · ~80 s
+  </div>
+</header>
+
+<div class="stage-wrap">
+  <div class="frame" id="frame">
+    <canvas id="cv" width="1280" height="720"></canvas>
+
+    <div class="titlecard" id="titlecard">
+      <div class="tk" id="tc-k"></div>
+      <h1 id="tc-h"></h1>
+      <p id="tc-p"></p>
+    </div>
+
+    <div class="caption" id="caption">
+      <div class="ck" id="cap-k"></div>
+      <div class="ct" id="cap-t"></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="ctl-row">
+      <button class="btn btn-play" id="btnPlay" aria-label="Lecture / pause"></button>
+      <button class="btn btn-ghost" id="btnRestart" title="Revenir au début">↺&nbsp; Rejouer</button>
+      <div class="time" id="time">00:00 / 00:00</div>
+      <div class="scrub" id="scrub" role="slider" aria-label="Position de lecture" aria-valuemin="0" aria-valuemax="100" tabindex="0">
+        <div class="rail"><div class="fill" id="fill"></div><div class="marks" id="marks"></div></div>
+        <div class="knob" id="knob"></div>
+      </div>
+    </div>
+    <div class="ctl-row">
+      <div class="chips" id="chips"></div>
+    </div>
+  </div>
+
+  <p class="footnote">
+    La propagation est <b>ralentie ≈ ×300</b> pour rester lisible ; les durées affichées
+    (<code>ms</code>, <code>TR ≈ 2,0 s</code>) correspondent au temps réel dans une grande salle de concert.
+    Raccourcis : <code>espace</code> lecture/pause · <code>←</code>/<code>→</code> changer de scène.
+  </p>
+</div>
+
+<script>
+'use strict';
+/* ════════════════════════════════════════════════════════════════
+   L'ÉNERGIE SONORE DANS UN AUDITORIUM — motion design en canvas.
+   Rendu 100 % déterministe : chaque image est une fonction pure du
+   temps t, ce qui rend la frise navigable (scrub) sans état caché.
+   ════════════════════════════════════════════════════════════════ */
+
+const W = 1280, H = 720;
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+
+/* ── palette ── */
+const C = {
+  hall: '#241D19', hallDeep: '#1C1714',
+  shell: '#D4C5B0', wood: '#3D2F26', woodLight: '#54402F',
+  seat: '#5C3A33', seatBack: '#6E463D',
+  amber: '#C69B3A', amberBright: '#E8B84B', gold: '#F4D9B5',
+  red: '#9D0C15', redLight: '#B91C28',
+  cream: '#FAF9F5', onDark: '#E8DFD0', onDark2: '#BFB3A0',
+};
+
+/* ── géométrie de la salle (coupe longitudinale) ── */
+// scène à gauche, parterre en gradins à droite, plafond à panneaux réflecteurs
+const SHELL = [
+  [140,180],[430,148],[740,178],[1140,228],   // plafond (3 pans)
+  [1140,500],                                  // mur du fond
+  [460,585],                                   // gradins (fond → premier rang)
+  [460,530],[140,530],                         // nez de scène + plateau
+];
+const S = { x: 280, y: 472 };   // source (instrumentiste sur scène)
+const L = { x: 880, y: 506 };   // auditeur (tête)
+
+function rakeY(x) { return 585 - 85 * (x - 460) / 680; } // ligne des gradins
+
+/* ── trajets : direct + premières réflexions (1 rebond) ── */
+function pathLen(pts) {
+  let d = 0;
+  for (let i = 1; i < pts.length; i++) d += Math.hypot(pts[i][0]-pts[i-1][0], pts[i][1]-pts[i-1][1]);
+  return d;
+}
+const PX_TO_MS = 0.073;          // échelle : ~25 m de salle pour 1000 px
+const RAYS = [
+  { id:'direct',  pts: [[S.x,S.y],[L.x,L.y]],                 label:'Son direct',        col:C.amberBright },
+  { id:'floor',   pts: [[S.x,S.y],[372,530],[L.x,L.y]],       label:'Scène',             col:'#D88E4A' },
+  { id:'ceil1',   pts: [[S.x,S.y],[540,160],[L.x,L.y]],       label:'Plafond 1',         col:'#C96F6F' },
+  { id:'ceil2',   pts: [[S.x,S.y],[850,190],[L.x,L.y]],       label:'Plafond 2',         col:'#B8809C' },
+  { id:'wall',    pts: [[S.x,S.y],[140,320],[L.x,L.y]],       label:'Paroi côté scène',  col:'#8E9C6B' },
+  { id:'back',    pts: [[S.x,S.y],[1140,352],[L.x,L.y]],      label:'Mur du fond',       col:'#7E94B8' },
+].map(r => ({ ...r, len: pathLen(r.pts), ms: Math.round(pathLen(r.pts) * PX_TO_MS) }));
+
+const SOUND_PX_S = 240;          // vitesse du front à l'écran (≈ ×300 plus lent)
+
+/* ── scènes ── */
+const SCENES = [
+  { id:'intro',  t0:0,  dur:6,  chip:'Intro' },
+  { id:'source', t0:6,  dur:12, chip:'Émission' },
+  { id:'direct', t0:18, dur:12, chip:'Son direct' },
+  { id:'reflex', t0:30, dur:16, chip:'Réflexions' },
+  { id:'reverb', t0:46, dur:14, chip:'Réverbération' },
+  { id:'decay',  t0:60, dur:14, chip:'RT60' },
+  { id:'outro',  t0:74, dur:7,  chip:'Final' },
+];
+const DUR = 81;
+
+const CAPTIONS = {
+  source: { k:'01 · L’émission',
+    t:'L’instrument rayonne de l’<b>énergie acoustique</b> dans toutes les directions. Les fronts d’onde se propagent dans l’air à <b>343 m/s</b> et rencontrent les parois de la salle.' },
+  direct: { k:'02 · Le son direct',
+    t:'Suivons une seule impulsion. Le trajet le plus court atteint l’auditeur en premier : c’est le <b>son direct</b> (≈ 44 ms ici). Il porte la <b>précision</b> et la <b>localisation</b> de la source.' },
+  reflex: { k:'03 · Les premières réflexions',
+    t:'Plafond, parois, plancher de scène : chaque surface <b>renvoie l’énergie</b>. Arrivées moins de <b>80 ms</b> après le son direct, ces réflexions fusionnent avec lui : <b>clarté</b> et sensation d’<b>enveloppement</b>.' },
+  reverb: { k:'04 · La réverbération',
+    t:'Les réflexions se multiplient et se densifient : l’énergie devient un <b>champ diffus</b> qui remplit tout le volume. C’est la réverbération, le « halo » sonore de la salle.' },
+  decay:  { k:'05 · La décroissance — RT60',
+    t:'L’énergie décroît de façon <b>exponentielle</b>. Le temps nécessaire pour perdre <b>60 dB</b> est le <b>temps de réverbération</b> : ici TR ≈ 2,0 s, typique d’une grande salle de concert.' },
+};
+const TITLES = {
+  intro: { k:'CNSMDP Learning Lab · Acoustique des salles',
+           h:'L’énergie sonore dans un auditorium',
+           p:'De l’émission à l’extinction : suivez le trajet de l’énergie acoustique, de la scène jusqu’à la dernière seconde de réverbération.' },
+  outro: { k:'À retenir',
+           h:'Direct + réflexions + réverbération',
+           p:'La signature acoustique d’une salle, c’est l’équilibre entre le son direct (précision), les premières réflexions (clarté, enveloppement) et la réverbération (ampleur, fondu).' },
+};
+
+/* ── aléatoire déterministe ── */
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function pointInShell(x, y) {
+  let inside = false;
+  for (let i = 0, j = SHELL.length - 1; i < SHELL.length; j = i++) {
+    const [xi, yi] = SHELL[i], [xj, yj] = SHELL[j];
+    if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
+/* particules du champ diffus */
+const PARTICLES = (() => {
+  const rnd = mulberry32(20260611), out = [];
+  while (out.length < 150) {
+    const x = 160 + rnd() * 960, y = 165 + rnd() * 400;
+    if (pointInShell(x, y)) out.push({ x, y, r: 1.2 + rnd() * 2.4, ph: rnd() * Math.PI * 2, sp: 0.5 + rnd() * 1.4 });
+  }
+  return out;
+})();
+
+/* échogramme : queue diffuse après les premières réflexions */
+const TAIL = (() => {
+  const rnd = mulberry32(424242), out = [];
+  let ms = 96;
+  while (ms < 360) {
+    out.push({ ms, a: Math.exp(-(ms - 90) / 110) * (0.45 + rnd() * 0.5) });
+    ms += 4 + rnd() * 9;
+  }
+  return out;
+})();
+
+/* ── easing / utilitaires ── */
+const clamp01 = v => Math.max(0, Math.min(1, v));
+const easeOut = p => 1 - Math.pow(1 - p, 3);
+const easeIn  = p => p * p * p;
+// fenêtre [a,b] avec fondu f
+function win(t, a, b, f = 0.6) {
+  if (t < a || t > b) return 0;
+  return Math.min(clamp01((t - a) / f), clamp01((b - t) / f));
+}
+function lerpPt(p, q, k) { return [p[0] + (q[0]-p[0]) * k, p[1] + (q[1]-p[1]) * k]; }
+function pointAlong(pts, d) {
+  for (let i = 1; i < pts.length; i++) {
+    const seg = Math.hypot(pts[i][0]-pts[i-1][0], pts[i][1]-pts[i-1][1]);
+    if (d <= seg) return lerpPt(pts[i-1], pts[i], d / seg);
+    d -= seg;
+  }
+  return pts[pts.length - 1].slice();
+}
+function strokePartial(pts, k) {
+  const total = pathLen(pts);
+  let remain = total * clamp01(k);
+  ctx.beginPath();
+  ctx.moveTo(pts[0][0], pts[0][1]);
+  for (let i = 1; i < pts.length && remain > 0; i++) {
+    const seg = Math.hypot(pts[i][0]-pts[i-1][0], pts[i][1]-pts[i-1][1]);
+    if (remain >= seg) { ctx.lineTo(pts[i][0], pts[i][1]); remain -= seg; }
+    else { const p = lerpPt(pts[i-1], pts[i], remain / seg); ctx.lineTo(p[0], p[1]); remain = 0; }
+  }
+  ctx.stroke();
+}
+
+/* ── décor : la salle ── */
+function shellPath() {
+  ctx.beginPath();
+  ctx.moveTo(SHELL[0][0], SHELL[0][1]);
+  for (let i = 1; i < SHELL.length; i++) ctx.lineTo(SHELL[i][0], SHELL[i][1]);
+  ctx.closePath();
+}
+
+function drawHall(t, energyGlow) {
+  // fond
+  const bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, C.hallDeep); bg.addColorStop(1, C.hall);
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+
+  // intro : la coupe se dessine au trait
+  const draw = t < 6 ? easeOut(clamp01((t - 0.8) / 3.6)) : 1;
+  const settled = t < 6 ? easeOut(clamp01((t - 3.4) / 2.2)) : 1;
+
+  // volume intérieur, légèrement réchauffé par l'énergie présente
+  if (settled > 0) {
+    shellPath();
+    const g = ctx.createRadialGradient(S.x, S.y, 40, S.x, S.y, 900);
+    g.addColorStop(0, `rgba(198,155,58,${(0.10 + 0.16 * energyGlow) * settled})`);
+    g.addColorStop(0.5, `rgba(120,90,50,${(0.05 + 0.07 * energyGlow) * settled})`);
+    g.addColorStop(1, 'rgba(36,29,25,0)');
+    ctx.fillStyle = g; ctx.fill();
+  }
+
+  // panneaux réflecteurs au plafond
+  if (settled > 0) {
+    ctx.globalAlpha = settled;
+    const panels = [[[150,186],[420,156]],[[440,158],[730,186]],[[750,188],[1130,234]]];
+    panels.forEach(([a, b]) => {
+      ctx.beginPath();
+      ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]);
+      ctx.lineTo(b[0] - 14, b[1] + 16); ctx.lineTo(a[0] + 14, a[1] + 16);
+      ctx.closePath();
+      ctx.fillStyle = C.woodLight; ctx.fill();
+      ctx.strokeStyle = 'rgba(212,197,176,0.25)'; ctx.lineWidth = 1; ctx.stroke();
+    });
+
+    // plateau de scène
+    ctx.fillStyle = C.wood;
+    ctx.fillRect(140, 530, 320, 14);
+    ctx.fillStyle = 'rgba(212,197,176,0.12)';
+    ctx.fillRect(140, 530, 320, 2);
+    // nez de scène
+    ctx.fillStyle = C.hallDeep; ctx.fillRect(448, 530, 12, 55);
+
+    // gradins + fauteuils
+    ctx.strokeStyle = 'rgba(212,197,176,0.3)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(460, 585); ctx.lineTo(1140, 500); ctx.stroke();
+    for (let x = 520; x <= 1100; x += 58) {
+      const y = rakeY(x);
+      ctx.fillStyle = C.seat;
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(x - 12, y - 22, 24, 20, 4); else ctx.rect(x - 12, y - 22, 24, 20);
+      ctx.fill();
+      ctx.fillStyle = C.seatBack;
+      ctx.fillRect(x + 8, y - 34, 5, 32);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // coque (trait)
+  ctx.strokeStyle = `rgba(212,197,176,${0.32 + 0.45 * draw})`;
+  ctx.lineWidth = 2.5; ctx.lineJoin = 'round';
+  strokePartial([...SHELL, SHELL[0]], draw);
+
+  // étiquettes discrètes du décor
+  if (settled > 0.5 && t < 30) {
+    ctx.globalAlpha = (settled - 0.5) * 2 * (t < 26 ? 1 : clamp01((30 - t) / 4));
+    ctx.fillStyle = 'rgba(191,179,160,0.85)';
+    ctx.font = '11px "Share Tech Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('SCÈNE', 290, 562);
+    ctx.fillText('PARTERRE', 800, 624);
+    ctx.fillText('PANNEAUX RÉFLECTEURS', 640, 130);
+    ctx.globalAlpha = 1;
+  }
+}
+
+/* ── personnages ── */
+function drawSource(t, active) {
+  const a = t < 6 ? easeOut(clamp01((t - 4.2) / 1.5)) : 1;
+  if (a <= 0) return;
+  ctx.globalAlpha = a;
+  // halo
+  const glow = 0.35 + 0.65 * active * (0.6 + 0.4 * Math.sin(t * 6));
+  const g = ctx.createRadialGradient(S.x, S.y, 2, S.x, S.y, 46);
+  g.addColorStop(0, `rgba(232,184,75,${0.55 * glow})`);
+  g.addColorStop(1, 'rgba(232,184,75,0)');
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.arc(S.x, S.y, 46, 0, Math.PI * 2); ctx.fill();
+  // pupitre / musicien stylisé
+  ctx.fillStyle = C.gold;
+  ctx.beginPath(); ctx.arc(S.x, S.y - 24, 9, 0, Math.PI * 2); ctx.fill();   // tête
+  ctx.strokeStyle = C.gold; ctx.lineWidth = 5; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(S.x, S.y - 14); ctx.lineTo(S.x, S.y + 18); ctx.stroke(); // corps
+  ctx.beginPath(); ctx.moveTo(S.x, S.y + 18); ctx.lineTo(S.x - 9, S.y + 52); ctx.moveTo(S.x, S.y + 18); ctx.lineTo(S.x + 9, S.y + 52); ctx.stroke();
+  // violoncelle suggéré
+  ctx.strokeStyle = `rgba(216,142,74,${a})`; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.ellipse(S.x + 16, S.y + 16, 10, 17, -0.25, 0, Math.PI * 2); ctx.stroke();
+  ctx.fillStyle = 'rgba(232,184,75,0.95)';
+  ctx.font = '600 13px Montserrat, sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('SOURCE', S.x, S.y + 76);
+  ctx.globalAlpha = 1;
+}
+
+function drawListener(t, highlight) {
+  const a = t < 6 ? easeOut(clamp01((t - 4.6) / 1.5)) : 1;
+  if (a <= 0) return;
+  ctx.globalAlpha = a;
+  if (highlight > 0) {
+    const g = ctx.createRadialGradient(L.x, L.y, 2, L.x, L.y, 40);
+    g.addColorStop(0, `rgba(232,184,75,${0.6 * highlight})`);
+    g.addColorStop(1, 'rgba(232,184,75,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(L.x, L.y, 40, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.fillStyle = highlight > 0.4 ? C.gold : C.onDark2;
+  ctx.beginPath(); ctx.arc(L.x, L.y, 8, 0, Math.PI * 2); ctx.fill();         // tête
+  ctx.strokeStyle = ctx.fillStyle; ctx.lineWidth = 5; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(L.x, L.y + 8); ctx.lineTo(L.x, L.y + 26); ctx.stroke();
+  ctx.fillStyle = 'rgba(191,179,160,0.95)';
+  ctx.font = '600 12px Montserrat, sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('AUDITEUR', L.x, L.y + 48);
+  ctx.globalAlpha = 1;
+}
+
+/* ── fronts d'onde circulaires (clippés au volume) ── */
+function drawWavefronts(t, t0, every, until, alphaK) {
+  ctx.save(); shellPath(); ctx.clip();
+  for (let i = 0; ; i++) {
+    const te = t0 + i * every;
+    if (te > Math.min(t, until)) break;
+    const age = t - te;
+    const r = age * SOUND_PX_S;
+    if (r > 1150) continue;
+    const a = Math.max(0, 1 - r / 1050) * alphaK;
+    if (a <= 0.01) continue;
+    ctx.strokeStyle = `rgba(232,184,75,${0.55 * a})`;
+    ctx.lineWidth = 2.2;
+    ctx.beginPath(); ctx.arc(S.x, S.y, r, 0, Math.PI * 2); ctx.stroke();
+    ctx.strokeStyle = `rgba(157,12,21,${0.3 * a})`;
+    ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.arc(S.x, S.y, Math.max(0, r - 7), 0, Math.PI * 2); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+/* ── impulsion suivie le long des trajets ── */
+function drawRay(ray, tImp, t, { showTrail = 1, alpha = 1 } = {}) {
+  const d = (t - tImp) * SOUND_PX_S;
+  if (d <= 0 || alpha <= 0) return null;
+  const k = Math.min(1, d / ray.len);
+  // traînée
+  if (showTrail > 0) {
+    ctx.strokeStyle = ray.col;
+    ctx.globalAlpha = 0.4 * alpha * showTrail;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([7, 7]);
+    strokePartial(ray.pts, k);
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+  }
+  // pulse
+  if (k < 1) {
+    const p = pointAlong(ray.pts, d);
+    const g = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], 16);
+    g.addColorStop(0, ray.col);
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(p[0], p[1], 16, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#FFF7E8';
+    ctx.beginPath(); ctx.arc(p[0], p[1], 4, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+    return { arrived: false };
+  }
+  // flash d'arrivée
+  const after = (d - ray.len) / SOUND_PX_S;
+  if (after < 0.9) {
+    const fl = 1 - after / 0.9;
+    ctx.globalAlpha = alpha * fl;
+    ctx.strokeStyle = ray.col; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(L.x, L.y, 12 + after * 50, 0, Math.PI * 2); ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+  return { arrived: true, after };
+}
+
+/* ── échogramme (réponse impulsionnelle stylisée) ── */
+function drawEchogram(t, tImp, x, y, w, h, alpha, withTail, tailK) {
+  if (alpha <= 0) return;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  // cartouche
+  ctx.fillStyle = 'rgba(28,23,20,0.88)';
+  ctx.strokeStyle = 'rgba(212,197,176,0.3)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(x, y, w, h, 12); else ctx.rect(x, y, w, h);
+  ctx.fill(); ctx.stroke();
+
+  const px = x + 46, pw = w - 70, py = y + h - 34, ph = h - 70;
+  const MSMAX = 360;
+  const msToX = ms => px + pw * ms / MSMAX;
+
+  ctx.font = '11px "Share Tech Mono", monospace';
+  ctx.fillStyle = C.onDark2; ctx.textAlign = 'left';
+  ctx.fillText('RÉPONSE IMPULSIONNELLE', x + 16, y + 24);
+  ctx.textAlign = 'center';
+  [0, 100, 200, 300].forEach(ms => {
+    ctx.fillStyle = 'rgba(191,179,160,0.6)';
+    ctx.fillText(ms + '', msToX(ms), py + 20);
+    ctx.strokeStyle = 'rgba(212,197,176,0.14)';
+    ctx.beginPath(); ctx.moveTo(msToX(ms), py); ctx.lineTo(msToX(ms), py - ph); ctx.stroke();
+  });
+  ctx.fillStyle = 'rgba(191,179,160,0.6)';
+  ctx.textAlign = 'right'; ctx.fillText('ms', x + w - 12, py + 20);
+  // axe
+  ctx.strokeStyle = 'rgba(212,197,176,0.4)';
+  ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + pw, py); ctx.stroke();
+
+  // fenêtre de fusion (≤ 80 ms après le direct)
+  const fuseA = msToX(RAYS[0].ms), fuseB = msToX(RAYS[0].ms + 80);
+  ctx.fillStyle = 'rgba(198,155,58,0.08)';
+  ctx.fillRect(fuseA, py - ph, fuseB - fuseA, ph);
+
+  // barres : direct + réflexions, qui apparaissent à leur arrivée réelle
+  RAYS.forEach((r, i) => {
+    const arrival = tImp + r.len / SOUND_PX_S;
+    if (t < arrival) return;
+    const pop = easeOut(clamp01((t - arrival) / 0.5));
+    const amp = (i === 0 ? 1 : 0.42 + 0.3 * Math.exp(-i / 3)) * pop;
+    const bx = msToX(r.ms);
+    ctx.strokeStyle = r.col; ctx.lineWidth = i === 0 ? 5 : 3.5; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(bx, py); ctx.lineTo(bx, py - ph * amp); ctx.stroke();
+  });
+
+  // queue diffuse
+  if (withTail && tailK > 0) {
+    TAIL.forEach((b, i) => {
+      const reveal = clamp01(tailK * TAIL.length - i);
+      if (reveal <= 0) return;
+      const bx = msToX(b.ms);
+      ctx.strokeStyle = `rgba(198,155,58,${0.55 * reveal})`;
+      ctx.lineWidth = 2; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(bx, py); ctx.lineTo(bx, py - ph * b.a * reveal); ctx.stroke();
+    });
+  }
+
+  // légende fusion
+  ctx.fillStyle = 'rgba(232,184,75,0.85)';
+  ctx.font = '10px "Share Tech Mono", monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('≤ 80 ms : fusion', (fuseA + fuseB) / 2, py - ph - 8);
+  ctx.restore();
+}
+
+/* ── courbe de décroissance (RT60) ── */
+function drawDecay(t, x, y, w, h, alpha, progress) {
+  if (alpha <= 0) return;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = 'rgba(28,23,20,0.9)';
+  ctx.strokeStyle = 'rgba(212,197,176,0.3)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(x, y, w, h, 12); else ctx.rect(x, y, w, h);
+  ctx.fill(); ctx.stroke();
+
+  const px = x + 64, pw = w - 92, py = y + 48, ph = h - 100;
+  const TMAX = 2.6, DBMIN = -70;
+  const sToX = s => px + pw * s / TMAX;
+  const dbToY = db => py + ph * (db / DBMIN);
+
+  ctx.font = '11px "Share Tech Mono", monospace';
+  ctx.fillStyle = C.onDark2; ctx.textAlign = 'left';
+  ctx.fillText('DÉCROISSANCE DE L’ÉNERGIE', x + 16, y + 26);
+
+  // grille
+  [0, -20, -40, -60].forEach(db => {
+    ctx.strokeStyle = db === -60 ? 'rgba(157,12,21,0.55)' : 'rgba(212,197,176,0.14)';
+    ctx.setLineDash(db === -60 ? [5, 5] : []);
+    ctx.beginPath(); ctx.moveTo(px, dbToY(db)); ctx.lineTo(px + pw, dbToY(db)); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = db === -60 ? '#D98A8A' : 'rgba(191,179,160,0.6)';
+    ctx.textAlign = 'right';
+    ctx.fillText(db + ' dB', px - 8, dbToY(db) + 4);
+  });
+  [0, 1, 2].forEach(s => {
+    ctx.fillStyle = 'rgba(191,179,160,0.6)'; ctx.textAlign = 'center';
+    ctx.fillText(s + ' s', sToX(s), py + ph + 20);
+  });
+
+  // courbe : -30 dB/s → RT60 = 2,0 s
+  const RT = 2.0;
+  ctx.strokeStyle = C.amberBright; ctx.lineWidth = 3; ctx.lineCap = 'round';
+  ctx.beginPath();
+  const sMax = TMAX * clamp01(progress);
+  for (let s = 0; s <= sMax; s += 0.02) {
+    const db = Math.max(DBMIN, -60 * s / RT);
+    const X = sToX(s), Y = dbToY(db);
+    if (s === 0) ctx.moveTo(X, Y); else ctx.lineTo(X, Y);
+  }
+  ctx.stroke();
+
+  // annotation RT60
+  if (progress > RT / TMAX + 0.05) {
+    const a2 = clamp01((progress - RT / TMAX - 0.05) / 0.2);
+    ctx.globalAlpha = alpha * a2;
+    const X = sToX(RT), Y = dbToY(-60);
+    ctx.strokeStyle = 'rgba(232,184,75,0.8)'; ctx.setLineDash([4, 4]); ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(X, py); ctx.lineTo(X, Y); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = C.amberBright;
+    ctx.beginPath(); ctx.arc(X, Y, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.font = '700 15px Montserrat, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('TR ≈ 2,0 s', X, py - 12);
+    ctx.globalAlpha = alpha;
+  }
+  ctx.restore();
+}
+
+/* ── champ diffus ── */
+function drawParticles(t, alpha, envelope) {
+  if (alpha <= 0) return;
+  ctx.save(); shellPath(); ctx.clip();
+  PARTICLES.forEach(p => {
+    const tw = 0.45 + 0.55 * Math.sin(t * p.sp * 2.2 + p.ph) ** 2;
+    const a = alpha * envelope * tw * 0.8;
+    if (a <= 0.01) return;
+    const drift = Math.sin(t * 0.7 + p.ph) * 4;
+    ctx.fillStyle = `rgba(232,184,75,${a})`;
+    ctx.beginPath(); ctx.arc(p.x + drift, p.y + Math.cos(t * 0.5 + p.ph) * 3, p.r * (0.7 + 0.6 * envelope), 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.restore();
+}
+
+/* ── jauge d'énergie (coin haut droit) ── */
+function drawEnergyMeter(t, alpha, level) {
+  if (alpha <= 0) return;
+  const x = W - 200, y = 28, w = 168, h = 14;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.font = '11px "Share Tech Mono", monospace';
+  ctx.fillStyle = C.onDark2; ctx.textAlign = 'left';
+  ctx.fillText('ÉNERGIE DANS LA SALLE', x, y - 8);
+  ctx.fillStyle = 'rgba(255,255,255,0.08)';
+  ctx.strokeStyle = 'rgba(212,197,176,0.35)'; ctx.lineWidth = 1;
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(x, y, w, h, 7); else ctx.rect(x, y, w, h);
+  ctx.fill(); ctx.stroke();
+  const g = ctx.createLinearGradient(x, 0, x + w, 0);
+  g.addColorStop(0, C.red); g.addColorStop(1, C.amberBright);
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(x + 2, y + 2, Math.max(2, (w - 4) * clamp01(level)), h - 4, 5);
+  else ctx.rect(x + 2, y + 2, Math.max(2, (w - 4) * clamp01(level)), h - 4);
+  ctx.fill();
+  ctx.restore();
+}
+
+/* ── horloge "temps réel" pendant le suivi d'impulsion ── */
+function drawClock(t, tImp, alpha) {
+  if (alpha <= 0) return;
+  const ms = Math.max(0, (t - tImp) * SOUND_PX_S * PX_TO_MS);
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.font = '700 26px "Share Tech Mono", monospace';
+  ctx.fillStyle = C.gold; ctx.textAlign = 'left';
+  ctx.fillText(`t = ${String(Math.round(ms)).padStart(3, '0')} ms`, 36, 56);
+  ctx.font = '11px "Share Tech Mono", monospace';
+  ctx.fillStyle = C.onDark2;
+  ctx.fillText('TEMPS RÉEL · RALENTI ≈ ×300', 36, 76);
+  ctx.restore();
+}
+
+/* ════════════ COMPOSITION ════════════ */
+const T_IMP1 = 19.5;   // impulsion suivie (scène "son direct")
+const T_IMP2 = 31.0;   // impulsion rejouée (scène "réflexions")
+
+function energyLevel(t) {
+  // niveau global pour la jauge + la lueur de la salle
+  if (t < 6) return 0;
+  if (t < 18) return clamp01((t - 6) / 4) * 0.55;                       // émission continue
+  if (t < 30) return 0.35 + 0.25 * Math.exp(-((t - T_IMP1) ** 2) / 6);  // impulsion
+  if (t < 46) return 0.45 + clamp01((t - 31) / 10) * 0.3;               // réflexions s'accumulent
+  if (t < 60) return 0.75 + 0.15 * clamp01((t - 46) / 6);               // champ diffus plein
+  if (t < 74) return 0.9 * Math.exp(-(t - 60) / 4.2);                   // décroissance
+  return 0;
+}
+
+function render(t) {
+  const e = energyLevel(t);
+  drawHall(t, e);
+
+  /* émission continue (scène 2, s'éteint au début de la scène 3) */
+  const wfA = win(t, 7, 19, 1.2);
+  if (wfA > 0) drawWavefronts(t, 7, 1.15, 18.2, wfA);
+
+  /* impulsion n°1 : front circulaire + son direct */
+  if (t >= T_IMP1 && t < 30) {
+    const a = win(t, T_IMP1, 30, 0.8);
+    drawWavefronts(t, T_IMP1, 999, T_IMP1 + 0.01, a); // un seul front
+    drawRay(RAYS[0], T_IMP1, t, { alpha: a });
+    const dArr = T_IMP1 + RAYS[0].len / SOUND_PX_S;
+    if (t > dArr) {
+      ctx.globalAlpha = a * easeOut(clamp01((t - dArr) / 0.6));
+      ctx.fillStyle = C.amberBright;
+      ctx.font = '700 15px Montserrat, sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText(`Son direct · ${RAYS[0].ms} ms`, (S.x + L.x) / 2, (S.y + L.y) / 2 - 26);
+      ctx.globalAlpha = 1;
+    }
+    drawClock(t, T_IMP1, a * win(t, T_IMP1, dArr + 3.5, 0.5));
+  }
+
+  /* impulsion n°2 : toutes les réflexions + échogramme */
+  if (t >= T_IMP2 - 0.5 && t < 47.5) {
+    const a = win(t, T_IMP2 - 0.5, 47.5, 1.0);
+    drawWavefronts(t, T_IMP2, 999, T_IMP2 + 0.01, a * 0.7);
+    RAYS.forEach(r => drawRay(r, T_IMP2, t, { alpha: a }));
+    const lastArr = T_IMP2 + RAYS[RAYS.length - 1].len / SOUND_PX_S;
+    drawClock(t, T_IMP2, a * win(t, T_IMP2, lastArr + 3, 0.5));
+  }
+
+  /* échogramme : visible des réflexions jusqu'à la réverbération
+     (calé en bas à droite, sur les derniers rangs, pour laisser l'auditeur visible) */
+  const egA = win(t, 33, 59, 1.2);
+  const tailK = easeIn(clamp01((t - 47) / 8));
+  drawEchogram(t, T_IMP2, W - 364, H - 212, 336, 190, egA, t > 46, tailK);
+
+  /* champ diffus */
+  const pvA = win(t, 46, 74.5, 2.0);
+  const env = t < 60 ? clamp01((t - 46) / 5) : Math.exp(-(t - 60) / 4.2);
+  drawParticles(t, pvA, env);
+
+  /* courbe RT60 */
+  const dcA = win(t, 60.5, 75, 1.0);
+  drawDecay(t, W - 470, 110, 434, 300, dcA, clamp01((t - 61.5) / 9));
+
+  /* personnages */
+  const srcActive = t > 6 && t < 60 ? 1 : 0;
+  drawSource(t, srcActive * clamp01(e * 2));
+  const dArr1 = T_IMP1 + RAYS[0].len / SOUND_PX_S;
+  const hl = Math.max(
+    t > dArr1 && t < 30 ? Math.exp(-(t - dArr1) / 2.5) : 0,
+    t > T_IMP2 && t < 46 ? clamp01((t - (T_IMP2 + RAYS[0].len / SOUND_PX_S)) * 2) * 0.7 : 0
+  );
+  drawListener(t, hl);
+
+  /* jauge d'énergie */
+  drawEnergyMeter(t, win(t, 6.5, 75, 1.5), e);
+
+  /* extinction douce vers le noir sur l'outro */
+  if (t > 74) {
+    ctx.fillStyle = `rgba(20,16,14,${0.55 * clamp01((t - 74) / 3)})`;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  /* vignette */
+  const v = ctx.createRadialGradient(W/2, H/2, H * 0.45, W/2, H/2, H * 0.95);
+  v.addColorStop(0, 'rgba(0,0,0,0)');
+  v.addColorStop(1, 'rgba(15,12,10,0.55)');
+  ctx.fillStyle = v; ctx.fillRect(0, 0, W, H);
+}
+
+/* ════════════ LECTEUR ════════════ */
+let t = 0, playing = false, last = null, raf = null;
+
+const $ = id => document.getElementById(id);
+const capEl = $('caption'), capK = $('cap-k'), capT = $('cap-t');
+const tcEl = $('titlecard'), tcK = $('tc-k'), tcH = $('tc-h'), tcP = $('tc-p');
+const btnPlay = $('btnPlay'), timeEl = $('time'), fillEl = $('fill'), knobEl = $('knob');
+const scrubEl = $('scrub'), chipsEl = $('chips'), marksEl = $('marks');
+
+const ICON_PLAY = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg>';
+const ICON_PAUSE = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4.4" height="14" rx="1.4"/><rect x="13.6" y="5" width="4.4" height="14" rx="1.4"/></svg>';
+
+function sceneAt(time) {
+  for (let i = SCENES.length - 1; i >= 0; i--) if (time >= SCENES[i].t0) return i;
+  return 0;
+}
+
+/* chips + repères de scènes */
+SCENES.forEach((s, i) => {
+  const b = document.createElement('button');
+  b.className = 'chip';
+  b.innerHTML = `<span class="n">${String(i + 1).padStart(2, '0')}</span>${s.chip}`;
+  b.addEventListener('click', () => { seek(s.t0 + 0.02); play(); });
+  chipsEl.appendChild(b);
+  if (i > 0) {
+    const m = document.createElement('div');
+    m.className = 'mark';
+    m.style.left = (s.t0 / DUR * 100) + '%';
+    marksEl.appendChild(m);
+  }
+});
+
+function fmt(sec) {
+  const m = Math.floor(sec / 60), s = Math.floor(sec % 60);
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
+let lastScene = -1, lastCapId = '';
+function syncUI() {
+  const pct = t / DUR * 100;
+  fillEl.style.width = pct + '%';
+  knobEl.style.left = pct + '%';
+  timeEl.textContent = `${fmt(t)} / ${fmt(DUR)}`;
+  scrubEl.setAttribute('aria-valuenow', Math.round(pct));
+
+  const si = sceneAt(t);
+  if (si !== lastScene) {
+    lastScene = si;
+    [...chipsEl.children].forEach((c, i) => c.classList.toggle('active', i === si));
+  }
+  const sc = SCENES[si];
+
+  // titre intro / outro
+  const ttl = TITLES[sc.id];
+  if (ttl) {
+    if (tcH.textContent !== ttl.h) { tcK.textContent = ttl.k; tcH.textContent = ttl.h; tcP.textContent = ttl.p; }
+    const inT = t - sc.t0;
+    // la carte finale reste affichée jusqu'au bout du film
+    tcEl.classList.toggle('show', inT > 0.4 && (sc.id === 'outro' || inT < sc.dur - 0.6));
+  } else tcEl.classList.remove('show');
+
+  // légende de scène
+  const cap = CAPTIONS[sc.id];
+  if (cap) {
+    if (lastCapId !== sc.id) { lastCapId = sc.id; capK.textContent = cap.k; capT.innerHTML = cap.t; }
+    const inT = t - sc.t0;
+    capEl.classList.toggle('show', inT > 0.5 && inT < sc.dur - 0.8);
+  } else { capEl.classList.remove('show'); lastCapId = ''; }
+}
+
+function frame(now) {
+  if (playing) {
+    if (last != null) t += Math.min(0.05, (now - last) / 1000);
+    last = now;
+    if (t >= DUR) { t = DUR; pause(); }
+  }
+  render(t);
+  syncUI();
+  raf = requestAnimationFrame(frame);
+}
+
+function play() {
+  if (t >= DUR - 0.05) t = 0;
+  playing = true; last = null;
+  btnPlay.innerHTML = ICON_PAUSE;
+}
+function pause() {
+  playing = false; last = null;
+  btnPlay.innerHTML = ICON_PLAY;
+}
+function seek(to) { t = Math.max(0, Math.min(DUR, to)); }
+
+btnPlay.addEventListener('click', () => playing ? pause() : play());
+$('btnRestart').addEventListener('click', () => { seek(0); play(); });
+
+/* scrub à la souris / au doigt */
+function scrubTo(clientX) {
+  const r = scrubEl.getBoundingClientRect();
+  seek((clientX - r.left) / r.width * DUR);
+}
+let dragging = false;
+scrubEl.addEventListener('pointerdown', e => { dragging = true; scrubEl.setPointerCapture(e.pointerId); scrubTo(e.clientX); });
+scrubEl.addEventListener('pointermove', e => { if (dragging) scrubTo(e.clientX); });
+scrubEl.addEventListener('pointerup', () => dragging = false);
+
+/* clavier */
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space') { e.preventDefault(); playing ? pause() : play(); }
+  else if (e.key === 'ArrowRight') { e.preventDefault(); seek(SCENES[Math.min(SCENES.length - 1, sceneAt(t) + 1)].t0 + 0.02); }
+  else if (e.key === 'ArrowLeft') {
+    e.preventDefault();
+    const si = sceneAt(t);
+    seek(t - SCENES[si].t0 > 1.5 ? SCENES[si].t0 + 0.02 : SCENES[Math.max(0, si - 1)].t0 + 0.02);
+  }
+});
+
+/* démarrage : lecture auto, sauf préférence "moins d'animations"
+   (dans ce cas, image fixe représentative — scène des réflexions) */
+pause();
+if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) seek(38);
+else play();
+raf = requestAnimationFrame(frame);
+</script>
+</body>
+</html>
