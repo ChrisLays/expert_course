@@ -67,6 +67,7 @@
   .tab[data-tab="sky"].active { color: #0B0E1A; background: linear-gradient(90deg, var(--cyan), #8BE9FD); }
   .tab[data-tab="forge"].active { color: #1A1206; background: linear-gradient(90deg, var(--amber), #F8D08A); }
   .tab[data-tab="codex"].active { color: #161029; background: linear-gradient(90deg, var(--violet), #C4B5FD); }
+  .tab[data-tab="dojo"].active { color: #2A0E1C; background: linear-gradient(90deg, var(--rose), #F9A8D4); }
 
   .intro { max-width: 700px; margin: 0 0 18px; color: var(--txt2); font-size: 14.5px; line-height: 1.65; }
   .intro b { color: var(--txt); }
@@ -91,7 +92,51 @@
   .legend i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
 
   /* ── forge ── */
-  .forge-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 16px; }
+  .forge-h2 { display: flex; align-items: baseline; gap: 12px; margin: 30px 0 6px; }
+  .forge-h2:first-of-type { margin-top: 4px; }
+  .forge-h2 h2 { margin: 0; font-size: 17px; font-weight: 700; }
+  .forge-h2 small { font-size: 12.5px; color: var(--txt3); }
+  .forge-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 16px; margin-bottom: 8px; }
+  .cmd select { width: 100%; border-radius: 10px; border: 1px solid var(--line); background: rgba(0,0,0,0.25);
+    color: var(--txt); font-family: 'Space Grotesk', sans-serif; font-size: 13px; padding: 10px 12px; outline: none; }
+  .cmd select:focus { border-color: rgba(242,180,80,0.5); }
+  .cmd-out { display: none; flex-direction: column; gap: 10px; border-top: 1px dashed var(--line); padding-top: 12px; }
+  .cmd-out.show { display: flex; }
+  .vlist { display: grid; gap: 5px; }
+  .vlist div { font-size: 12px; line-height: 1.5; display: flex; gap: 8px; align-items: flex-start; }
+  .vlist .v-ok { color: var(--ok); }
+  .vlist .v-bad { color: #FB7185; }
+  .learnlist { margin: 0; padding-left: 18px; display: grid; gap: 5px; }
+  .learnlist li { font-size: 12.3px; line-height: 1.55; color: var(--txt2); }
+  .learnlist li::marker { color: var(--violet); }
+  .learn-k { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--violet); }
+
+  /* ── dojo ── */
+  .dojo-setup { display: flex; flex-direction: column; gap: 16px; max-width: 720px; }
+  .dojo-domains { display: flex; gap: 7px; flex-wrap: wrap; }
+  .dojo-card { max-width: 720px; border: 1px solid var(--line); border-radius: 20px;
+    background: linear-gradient(170deg, var(--card), var(--bg2)); padding: 26px; }
+  .dojo-meta { display: flex; justify-content: space-between; align-items: center; gap: 10px;
+    font-family: var(--mono); font-size: 11px; color: var(--txt3); margin-bottom: 16px; }
+  .dojo-meta .streak { color: var(--rose); }
+  .dojo-q { font-size: 16px; line-height: 1.6; color: var(--txt); margin-bottom: 8px; }
+  .dojo-q .qk { display: block; font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--rose); margin-bottom: 8px; }
+  .dojo-q code, .dojo-ans code { font-family: var(--mono); font-size: 0.9em; color: #BFE8FF; }
+  .dojo-answers { display: grid; gap: 9px; margin-top: 16px; }
+  .dojo-ans { text-align: left; border: 1px solid var(--line); background: rgba(255,255,255,0.03);
+    color: var(--txt2); border-radius: 12px; padding: 13px 15px; font-size: 13.5px; line-height: 1.5;
+    cursor: pointer; font-family: 'Space Grotesk', sans-serif; transition: all 150ms; }
+  .dojo-ans:hover:not(:disabled) { border-color: var(--line-strong); background: rgba(255,255,255,0.05); }
+  .dojo-ans:disabled { cursor: default; opacity: 0.55; }
+  .dojo-ans.good { border-color: rgba(74,222,128,0.6); background: rgba(74,222,128,0.1); color: var(--ok); opacity: 1; }
+  .dojo-ans.bad { border-color: rgba(251,113,133,0.6); background: rgba(251,113,133,0.08); color: #FB7185; opacity: 1; }
+  .dojo-note { margin-top: 14px; padding: 12px 14px; border-radius: 11px; background: rgba(255,255,255,0.04);
+    border: 1px solid var(--line); font-size: 12.5px; line-height: 1.6; color: var(--txt2); }
+  .dojo-end { text-align: center; padding: 10px 0; }
+  .dojo-end .big { font-size: 42px; font-weight: 700; background: linear-gradient(90deg, var(--rose), var(--violet));
+    -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .btn-rose { background: linear-gradient(90deg, var(--rose), #F9A8D4); color: #2A0E1C; }
   .cmd { border: 1px solid var(--line); border-radius: var(--r); background: linear-gradient(170deg, var(--card), var(--bg2));
     padding: 20px 20px 18px; display: flex; flex-direction: column; gap: 12px; transition: border-color 250ms, transform 250ms; }
   .cmd:hover { border-color: rgba(242,180,80,0.4); transform: translateY(-2px); }
@@ -270,6 +315,7 @@
     <button class="tab active" data-tab="sky" role="tab">✦ Constellation</button>
     <button class="tab" data-tab="forge" role="tab">⚒ La Forge</button>
     <button class="tab" data-tab="codex" role="tab">⌘ Le Codex</button>
+    <button class="tab" data-tab="dojo" role="tab">◉ Le Dojo</button>
   </nav>
 
   <!-- ════ CONSTELLATION ════ -->
@@ -283,8 +329,14 @@
 
   <!-- ════ FORGE ════ -->
   <section id="view-forge" hidden>
-    <p class="intro">La Forge fabrique des <b>prompts experts prêts à coller</b> dans Claude ou Claude Code. Décrivez votre situation, forgez, copiez. Les commandes marquées <b>CC</b> méritent d'être installées en vraies commandes slash dans votre projet — le Codex explique comment.</p>
-    <div class="forge-grid" id="forgeGrid"></div>
+    <p class="intro">La Forge applique les règles du <b>Codex</b> pour fabriquer du concret : des <b>fichiers prêts à installer</b> (skills, hooks, sous-agents, CLAUDE.md, MCP) avec validation des contraintes officielles et explication de chaque choix — et des <b>prompts experts</b> à coller dans Claude. On apprend en fabriquant.</p>
+    <div id="forgeRoot"></div>
+  </section>
+
+  <!-- ════ DOJO ════ -->
+  <section id="view-dojo" hidden>
+    <p class="intro">Le Dojo entraîne votre <b>mémoire de l'outillage</b> : des séries de 10 questions tirées des 240 entrées du Codex. Reconnaître <code style="font-family:var(--mono);font-size:12px">/rewind</code> ou un événement de hook sans réfléchir, c'est ça, la fluidité d'un expert. Chaque bonne réponse = +1 XP (plafond <span id="dojoCap"></span> XP).</p>
+    <div id="dojoRoot"></div>
   </section>
 
   <!-- ════ CODEX ════ -->
@@ -370,15 +422,17 @@ const { BRANCHES, NODES, EDGES, HUB, COMMANDS, CODEX, LEVEL_NAMES } = window.VL;
 
 /* ── état & progression ── */
 const KEY = 'vibelab-v1';
-let state = { done: [], used: [], checks: {} };
+let state = { done: [], used: [], checks: {}, dojoXp: 0 };
 try { state = Object.assign(state, JSON.parse(localStorage.getItem(KEY)) || {}); } catch (e) {}
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
 
 const XP_NODE = 15, XP_CMD = 5;
-const MAX_XP = NODES.length * XP_NODE + COMMANDS.length * XP_CMD;
+const DOJO_CAP = window.VL.DOJO_CAP || 120;
+const MAX_XP = NODES.length * XP_NODE + COMMANDS.length * XP_CMD + DOJO_CAP;
 const LEVELS = LEVEL_NAMES.map(([frac, name]) => [Math.round(frac * MAX_XP), name]);
 function xp() { return state.done.filter(id => NODES.some(n => n.id === id)).length * XP_NODE
-  + state.used.filter(id => COMMANDS.some(c => c.id === id)).length * XP_CMD; }
+  + state.used.filter(id => COMMANDS.some(c => c.id === id)).length * XP_CMD
+  + Math.min(state.dojoXp || 0, DOJO_CAP); }
 function renderHud() {
   const v = xp();
   let name = LEVELS[0][1];
@@ -538,35 +592,178 @@ scrim.addEventListener('click', closePanel);
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closePanel(); });
 
 /* ── forge ── */
+function fieldHtml(c, f) {
+  if (f.type === 'select') return `<select id="${c.id}-${f.key}">${f.options.map(([v, l]) => `<option value="${v}">${esc(l)}</option>`).join('')}</select>`;
+  if (f.type === 'textarea') return `<textarea id="${c.id}-${f.key}" placeholder="${esc(f.ph || '')}"></textarea>`;
+  return `<input id="${c.id}-${f.key}" type="text" placeholder="${esc(f.ph || '')}" />`;
+}
 function renderForge() {
-  const grid = document.getElementById('forgeGrid');
-  grid.innerHTML = '';
-  COMMANDS.forEach(c => {
-    const used = state.used.includes(c.id);
-    const card = document.createElement('div');
-    card.className = 'cmd';
-    card.innerHTML = `
-      <div class="cmd-head">
-        <span class="cmd-name">${c.name}${c.cc ? ' <span class="tag" style="font-size:8.5px;letter-spacing:0.1em;border:1px solid var(--line);border-radius:99px;padding:2px 7px;color:var(--txt3);vertical-align:3px">CC</span>' : ''}</span>
-        <span class="cmd-badge ${used ? 'used' : ''}">${used ? '✓ utilisée' : '+' + XP_CMD + ' xp'}</span>
-      </div>
-      <p>${c.desc}</p>
-      ${c.fields.map(f => `
-        <div>
-          <label for="${c.id}-${f.key}">${f.label}</label>
-          ${f.type === 'textarea'
-            ? `<textarea id="${c.id}-${f.key}" placeholder="${f.ph}"></textarea>`
-            : `<input id="${c.id}-${f.key}" type="text" placeholder="${f.ph}" />`}
-        </div>`).join('')}
-      <button class="btn btn-amber">⚒ Forger &amp; copier le prompt</button>`;
-    card.querySelector('button.btn-amber').addEventListener('click', () => {
-      const vals = {};
-      c.fields.forEach(f => { vals[f.key] = document.getElementById(`${c.id}-${f.key}`).value.trim(); });
-      copyText(c.build(vals), `<b>${c.name}</b> forgé et copié — collez-le dans Claude ou Claude Code !`);
-      if (!state.used.includes(c.id)) { state.used.push(c.id); save(); renderHud(); renderForge(); }
+  const root = document.getElementById('forgeRoot');
+  root.innerHTML = '';
+  const groups = [
+    ['artefact', "Forges d'artefacts", 'de vrais fichiers et configs, règles du Codex appliquées et validées'],
+    ['prompt', 'Forges de prompts', 'des prompts experts à coller dans Claude ou Claude Code'],
+  ];
+  groups.forEach(([cat, title, sub]) => {
+    const h = document.createElement('div');
+    h.className = 'forge-h2';
+    h.innerHTML = `<h2>${cat === 'artefact' ? '🛠' : '⚒'} ${title}</h2><small>${sub}</small>`;
+    root.appendChild(h);
+    const grid = document.createElement('div');
+    grid.className = 'forge-grid';
+    COMMANDS.filter(c => (c.cat || 'prompt') === cat).forEach(c => {
+      const used = state.used.includes(c.id);
+      const card = document.createElement('div');
+      card.className = 'cmd';
+      card.innerHTML = `
+        <div class="cmd-head">
+          <span class="cmd-name">${c.name}${c.cc ? ' <span class="tag" style="font-size:8.5px;letter-spacing:0.1em;border:1px solid var(--line);border-radius:99px;padding:2px 7px;color:var(--txt3);vertical-align:3px">CC</span>' : ''}</span>
+          <span class="cmd-badge ${used ? 'used' : ''}">${used ? '✓ utilisée' : '+' + XP_CMD + ' xp'}</span>
+        </div>
+        <p>${c.desc}</p>
+        ${c.fields.map(f => `<div><label for="${c.id}-${f.key}">${f.label}</label>${fieldHtml(c, f)}</div>`).join('')}
+        <button class="btn btn-amber">⚒ Forger</button>
+        <div class="cmd-out" id="${c.id}-out"></div>`;
+      card.querySelector('button.btn-amber').addEventListener('click', () => {
+        const vals = {};
+        c.fields.forEach(f => { vals[f.key] = document.getElementById(`${c.id}-${f.key}`).value.trim(); });
+        const content = c.build(vals);
+        const out = document.getElementById(`${c.id}-out`);
+        const checks = c.check ? c.check(vals) : [];
+        const allOk = checks.every(x => x.ok);
+        out.innerHTML = `
+          ${checks.length ? `<div class="vlist">${checks.map(x => `<div class="${x.ok ? 'v-ok' : 'v-bad'}"><span>${x.ok ? '✓' : '✕'}</span><span>${x.msg}</span></div>`).join('')}</div>` : ''}
+          <div class="promptbox" style="max-height:300px">${esc(content).replace(/\[([^\]\n]{1,80})\]/g, '<span class="ph">[$1]</span>')}</div>
+          <button class="btn ${c.cat === 'artefact' ? 'btn-violet' : 'btn-amber'}" style="width:100%">⧉ Copier ${c.cat === 'artefact' ? "l'artefact" : 'le prompt'}</button>
+          ${c.learn ? `<div><div class="learn-k">Ce que cette forge vous apprend</div><ul class="learnlist">${c.learn.map(l => `<li>${l}</li>`).join('')}</ul></div>` : ''}`;
+        out.classList.add('show');
+        out.querySelector('button').addEventListener('click', () =>
+          copyText(content, `<b>${c.name}</b> copié${allOk ? '' : ' (⚠ corrigez les points en rouge avant usage)'} !`));
+        if (!state.used.includes(c.id)) { state.used.push(c.id); save(); renderHud();
+          card.querySelector('.cmd-badge').className = 'cmd-badge used';
+          card.querySelector('.cmd-badge').textContent = '✓ utilisée'; }
+      });
+      grid.appendChild(card);
     });
-    grid.appendChild(card);
+    root.appendChild(grid);
   });
+}
+
+/* ── dojo ── */
+const plainText = s => { const d = document.createElement('div'); d.innerHTML = s; return d.textContent || ''; };
+let dojo = null;
+function dojoPool(sectionId) {
+  const secs = CODEX.filter(s => sectionId === 'all' || s.id === sectionId);
+  const pool = [];
+  secs.forEach(s => s.entries.forEach(e => pool.push({ s, e })));
+  return pool;
+}
+function makeQuestion(pool) {
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+  const item = pick(pool);
+  const sameSec = pool.filter(x => x.s.id === item.s.id && x.e !== item.e);
+  const distractors = [];
+  const src = sameSec.length >= 3 ? sameSec : pool.filter(x => x.e !== item.e);
+  while (distractors.length < 3 && src.length) {
+    const d = pick(src);
+    if (!distractors.includes(d) && d.e !== item.e) distractors.push(d);
+  }
+  const nameToDesc = Math.random() < 0.45;
+  const trunc = (t, n) => { t = plainText(t); return t.length > n ? t.slice(0, n - 1) + '…' : t; };
+  if (nameToDesc) {
+    return {
+      kicker: item.s.title,
+      text: `Que fait <code>${esc(item.e.name)}</code> ?`,
+      answers: [item, ...distractors].map(x => ({ label: trunc(x.e.desc, 150), good: x === item })),
+      note: `<b style="color:var(--txt)">${esc(item.e.name)}</b> — ${plainText(item.e.desc)}`,
+    };
+  }
+  return {
+    kicker: item.s.title,
+    text: `« ${esc(trunc(item.e.desc, 170))} » — de quoi parle-t-on ?`,
+    answers: [item, ...distractors].map(x => ({ label: trunc(x.e.name, 80), good: x === item })),
+    note: `<b style="color:var(--txt)">${esc(item.e.name)}</b> — ${plainText(item.e.desc)}`,
+  };
+}
+function startDojo(sectionId) {
+  const pool = dojoPool(sectionId);
+  const qs = [];
+  for (let i = 0; i < 10; i++) qs.push(makeQuestion(pool));
+  dojo = { qs, i: 0, score: 0, streak: 0, best: 0, section: sectionId };
+  renderDojoQuestion();
+}
+function renderDojoSetup() {
+  const root = document.getElementById('dojoRoot');
+  document.getElementById('dojoCap').textContent = DOJO_CAP;
+  root.innerHTML = `
+    <div class="dojo-setup">
+      <div>
+        <div class="learn-k" style="margin-bottom:8px">Choisissez votre domaine</div>
+        <div class="dojo-domains">
+          <button class="cchip active" data-d="all">Tout le Codex<span class="n">${CODEX.reduce((s, x) => s + x.entries.length, 0)}</span></button>
+          ${CODEX.map(s => `<button class="cchip" data-d="${s.id}">${s.short}<span class="n">${s.entries.length}</span></button>`).join('')}
+        </div>
+      </div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--txt3)">XP Dojo : ${Math.min(state.dojoXp || 0, DOJO_CAP)} / ${DOJO_CAP}</div>
+      <button class="btn btn-rose" style="align-self:flex-start;padding:13px 26px" id="dojoStart">◉ Lancer une série de 10</button>
+    </div>`;
+  let domain = 'all';
+  root.querySelectorAll('.cchip').forEach(b => b.addEventListener('click', () => {
+    domain = b.dataset.d;
+    root.querySelectorAll('.cchip').forEach(x => x.classList.toggle('active', x === b));
+  }));
+  document.getElementById('dojoStart').addEventListener('click', () => startDojo(domain));
+}
+function renderDojoQuestion() {
+  const root = document.getElementById('dojoRoot');
+  if (dojo.i >= dojo.qs.length) {
+    const gained = dojo.score;
+    const before = Math.min(state.dojoXp || 0, DOJO_CAP);
+    state.dojoXp = (state.dojoXp || 0) + gained; save(); renderHud();
+    const capped = Math.min(state.dojoXp, DOJO_CAP) - before;
+    root.innerHTML = `
+      <div class="dojo-card dojo-end">
+        <div class="big">${dojo.score}/10</div>
+        <p style="color:var(--txt2);font-size:14px;margin:8px 0 4px">${dojo.score >= 9 ? 'Réflexes d’expert — le Codex est dans vos doigts.' : dojo.score >= 6 ? 'Solide. Encore quelques séries et ce sera automatique.' : 'Le Codex est ouvert à côté — refaites une série sur le même domaine.'}</p>
+        <p style="font-family:var(--mono);font-size:11px;color:var(--txt3)">meilleure série : ${dojo.best} d'affilée · +${capped} XP</p>
+        <div style="display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap">
+          <button class="btn btn-rose" id="dojoAgain">Rejouer ce domaine</button>
+          <button class="btn btn-ghost" id="dojoBack" style="background:rgba(255,255,255,0.06);color:var(--txt2);border:1px solid var(--line)">Changer de domaine</button>
+        </div>
+      </div>`;
+    document.getElementById('dojoAgain').addEventListener('click', () => startDojo(dojo.section));
+    document.getElementById('dojoBack').addEventListener('click', renderDojoSetup);
+    return;
+  }
+  const q = dojo.qs[dojo.i];
+  root.innerHTML = `
+    <div class="dojo-card">
+      <div class="dojo-meta">
+        <span>question ${dojo.i + 1} / ${dojo.qs.length}</span>
+        <span>score ${dojo.score}${dojo.streak >= 2 ? ` <span class="streak">· ${dojo.streak} d'affilée 🔥</span>` : ''}</span>
+      </div>
+      <div class="dojo-q"><span class="qk">${esc(q.kicker)}</span>${q.text}</div>
+      <div class="dojo-answers">
+        ${q.answers.map((a, i) => `<button class="dojo-ans" data-i="${i}">${esc(a.label)}</button>`).join('')}
+      </div>
+      <div id="dojoNote"></div>
+    </div>`;
+  // mélange visuel des réponses
+  const wrap = root.querySelector('.dojo-answers');
+  [...wrap.children].sort(() => Math.random() - 0.5).forEach(b => wrap.appendChild(b));
+  wrap.querySelectorAll('.dojo-ans').forEach(btn => btn.addEventListener('click', () => {
+    const a = q.answers[+btn.dataset.i];
+    wrap.querySelectorAll('.dojo-ans').forEach(b => {
+      b.disabled = true;
+      if (q.answers[+b.dataset.i].good) b.classList.add('good');
+    });
+    if (a.good) { dojo.score++; dojo.streak++; dojo.best = Math.max(dojo.best, dojo.streak); }
+    else { btn.classList.add('bad'); dojo.streak = 0; }
+    document.getElementById('dojoNote').innerHTML = `
+      <div class="dojo-note">${a.good ? '✓ Exact. ' : '✕ '} ${q.note}</div>
+      <button class="btn btn-rose" style="margin-top:12px" id="dojoNext">${dojo.i + 1 < dojo.qs.length ? 'Question suivante →' : 'Voir le score'}</button>`;
+    document.getElementById('dojoNext').addEventListener('click', () => { dojo.i++; renderDojoQuestion(); });
+  }));
 }
 
 /* ── codex ── */
@@ -634,21 +831,21 @@ document.getElementById('codexSearch').addEventListener('input', applyCodexFilte
 /* ── tabs ── */
 document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x === t));
-  document.getElementById('view-sky').hidden = t.dataset.tab !== 'sky';
-  document.getElementById('view-forge').hidden = t.dataset.tab !== 'forge';
-  document.getElementById('view-codex').hidden = t.dataset.tab !== 'codex';
+  ['sky', 'forge', 'codex', 'dojo'].forEach(v => { document.getElementById('view-' + v).hidden = t.dataset.tab !== v; });
+  if (t.dataset.tab === 'dojo' && !dojo) renderDojoSetup();
 }));
 
 /* ── reset ── */
 document.getElementById('resetBtn').addEventListener('click', () => {
   if (confirm('Effacer toute votre progression VibeLab sur ce navigateur ?')) {
-    state = { done: [], used: [], checks: {} }; save();
-    renderSky(); renderHud(); renderForge();
+    state = { done: [], used: [], checks: {}, dojoXp: 0 }; save();
+    dojo = null;
+    renderSky(); renderHud(); renderForge(); renderDojoSetup();
     toast('Progression réinitialisée — nouvelle constellation ✨');
   }
 });
 
-renderSky(); renderHud(); renderForge(); renderCodexChips(); renderCodex();
+renderSky(); renderHud(); renderForge(); renderCodexChips(); renderCodex(); renderDojoSetup();
 </script>
 </body>
 </html>

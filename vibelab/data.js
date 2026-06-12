@@ -19,6 +19,7 @@ VL.LEVEL_NAMES = [
   [0, "Novice de l'orbite"], [0.18, "Apprenti·e vibe coder"], [0.38, "Bâtisseur·se"],
   [0.6, "Ingénieur·e du vibe"], [0.82, "Architecte"], [1, "Constellation complète"],
 ];
+VL.DOJO_CAP = 120; // XP maximum gagnable au Dojo
 
 /* ════════════════ CONSTELLATION : 26 ÉTOILES ════════════════ */
 VL.NODES = [
@@ -545,6 +546,318 @@ Recommande-moi une stack complète (frontend, backend, base de données, auth, h
 2. Pour chaque couche : ton choix recommandé + UNE alternative crédible, avec le compromis en une phrase. Privilégie ce qu'un agent IA maîtrise bien et ce qui a le moins de pièces mobiles.
 3. Ce que ce choix me coûtera à 10× plus d'utilisateurs (migration douloureuse ou simple upgrade ?).
 4. La liste exacte des services à créer (comptes, clés) avant de lancer Claude Code, dans l'ordre.`,
+  },
+
+  /* ───── Forges d'artefacts : fichiers et configs réels, règles du Codex appliquées ───── */
+  {
+    id: "fskill", name: "Forge de skill", cat: "artefact",
+    desc: "Génère un SKILL.md complet et valide pour Claude Code — en appliquant les contraintes exactes du format officiel.",
+    fields: [
+      { key: "nom", label: "Nom de la skill (minuscules-et-tirets)", type: "input", ph: "ex. revue-design" },
+      { key: "desc", label: "Description : ce qu'elle fait ET quand l'utiliser (3e personne)", type: "input", ph: "ex. Vérifie la cohérence visuelle des écrans. À utiliser après toute modification d'interface." },
+      { key: "corps", label: "Les instructions (le prompt que la skill exécute)", type: "textarea", ph: "ex. Passe en revue les changements d'interface : cohérence des couleurs avec les design tokens, espacements, responsive…" },
+      { key: "hint", label: "Indice d'argument (optionnel)", type: "input", ph: "ex. [écran ou composant]" },
+    ],
+    check: f => {
+      const slug = (f.nom || "").toLowerCase().trim().replace(/\s+/g, "-");
+      return [
+        { ok: /^[a-z0-9-]{1,64}$/.test(slug), msg: "name : 1-64 caractères, minuscules/chiffres/tirets uniquement (règle officielle)" },
+        { ok: slug && !/(claude|anthropic)/.test(slug), msg: "name : les mots « claude » et « anthropic » sont interdits" },
+        { ok: (f.desc || "").length > 0 && (f.desc || "").length <= 1024, msg: "description : non vide, 1024 caractères max — c'est ELLE qui déclenche l'usage automatique" },
+        { ok: (f.corps || "").length > 0, msg: "corps : les instructions que Claude lira au déclenchement" },
+      ];
+    },
+    learn: [
+      "Seule la description vit en permanence dans le contexte (~100 tokens) ; le corps n'est chargé qu'au déclenchement — c'est la progressive disclosure.",
+      "$ARGUMENTS sera remplacé par ce que vous tapez après /votre-skill.",
+      "Commitée dans .claude/skills/, la skill profite à toute l'équipe ; dans ~/.claude/skills/, elle vous suit partout.",
+    ],
+    build: f => {
+      const slug = (f.nom || "ma-skill").toLowerCase().trim().replace(/\s+/g, "-");
+      return `--- FICHIER : .claude/skills/${slug}/SKILL.md ---
+
+---
+name: ${slug}
+description: ${f.desc || "[ce qu'elle fait et quand l'utiliser]"}${f.hint ? `
+argument-hint: "${f.hint}"` : ""}
+---
+
+${f.corps || "[Instructions que Claude exécutera]"}
+
+Sujet fourni : $ARGUMENTS
+
+--- INSTALLATION (terminal, à la racine du projet) ---
+
+mkdir -p .claude/skills/${slug}
+# collez le bloc ci-dessus dans .claude/skills/${slug}/SKILL.md
+# (ou demandez à Claude Code : « crée cette skill » en lui collant tout)
+
+--- TEST ---
+
+Dans Claude Code : /${slug} [votre sujet]
+La skill peut aussi se déclencher toute seule si la description correspond à la tâche.`;
+    },
+  },
+  {
+    id: "fhook", name: "Forge de hook", cat: "artefact",
+    desc: "Génère la configuration settings.json d'un hook — la garantie machine que le Codex documente, prête à coller.",
+    fields: [
+      { key: "recette", label: "Recette", type: "select", options: [
+        ["block", "Bloquer les commandes destructrices (PreToolUse)"],
+        ["format", "Auto-formater après chaque édition (PostToolUse)"],
+        ["env", "Protéger les fichiers .env (PreToolUse)"],
+        ["start", "Charger du contexte au démarrage (SessionStart)"],
+      ]},
+      { key: "extra", label: "Personnalisation (optionnel)", type: "input", ph: "ex. commande de format : npx prettier --write / motifs à bloquer…" },
+    ],
+    learn: [
+      "Instruction CLAUDE.md = demande que le modèle suit (presque toujours). Hook = garantie que la machine applique (toujours).",
+      "Exit code 2 dans un hook PreToolUse = blocage, et le message stderr est renvoyé à Claude pour qu'il s'adapte.",
+      "settings.json projet (.claude/) = partagé via git ; settings.local.json = rien que vous ; ~/.claude/settings.json = tous vos projets.",
+    ],
+    build: f => {
+      const R = {
+        block: `--- À AJOUTER dans .claude/settings.json ---
+
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Bash(rm -rf*)",
+            "command": "echo 'Commande destructrice bloquée par hook VibeLab' >&2; exit 2"
+          }
+        ]
+      }
+    ]
+  }
+}
+
+--- CE QUE ÇA FAIT ---
+Avant CHAQUE commande Bash correspondant au motif, le script s'exécute :
+exit 2 = appel bloqué, le message >&2 (stderr) est montré à Claude.
+${f.extra ? `Personnalisation demandée : adaptez le "if" → ex. "Bash(${f.extra}*)".` : `Ajoutez d'autres motifs en dupliquant le bloc (drop table, git push --force…).`}`,
+        format: `--- À AJOUTER dans .claude/settings.json ---
+
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${f.extra || "npx prettier --write \\\"$CLAUDE_FILE_PATHS\\\""}",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}
+
+--- CE QUE ÇA FAIT ---
+Après chaque édition/écriture de fichier, votre formateur passe automatiquement.
+Plus jamais de diff pollué par du formatage. Vérifiez la commande de format
+adaptée à votre stack (prettier, black, gofmt…).`,
+        env: `--- À AJOUTER dans .claude/settings.json ---
+
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "case \\"$CLAUDE_FILE_PATHS\\" in *.env*) echo 'Fichier .env protégé par hook' >&2; exit 2;; esac"
+          }
+        ]
+      }
+    ]
+  }
+}
+
+--- CE QUE ÇA FAIT ---
+Claude ne peut plus lire ni modifier vos fichiers .env (secrets) — même si
+un prompt malveillant ou une erreur le lui demandait. Garantie machine.`,
+        start: `--- À AJOUTER dans .claude/settings.json ---
+
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${f.extra || "git log --oneline -5 && git status -sb"}"
+          }
+        ]
+      }
+    ]
+  }
+}
+
+--- CE QUE ÇA FAIT ---
+À chaque démarrage de session, la sortie de la commande est injectée en
+contexte : Claude démarre en sachant où en est le projet (derniers commits,
+état de la branche). Adaptez la commande : tickets en cours, état du déploiement…`,
+      };
+      return R[f.recette || "block"] + `
+
+--- VÉRIFICATION ---
+Tapez /hooks dans Claude Code pour voir le hook enregistré, puis provoquez
+son déclenchement pour le voir agir.`;
+    },
+  },
+  {
+    id: "fagent", name: "Forge de sous-agent", cat: "artefact",
+    desc: "Génère un fichier .claude/agents/ complet — un spécialiste délégué avec son contexte isolé et ses outils limités.",
+    fields: [
+      { key: "nom", label: "Nom de l'agent", type: "input", ph: "ex. relecteur-securite" },
+      { key: "mission", label: "Sa mission (qui il est, ce qu'il vérifie, ce qu'il rend)", type: "textarea", ph: "ex. relire les changements comme un expert sécurité bienveillant : injections, secrets, validation…" },
+      { key: "tools", label: "Pouvoirs", type: "select", options: [
+        ["ro", "Lecture seule (Read, Grep, Glob) — relecteurs, auditeurs"],
+        ["rb", "Lecture + Bash — peut lancer tests et builds"],
+        ["all", "Tous les outils — peut modifier le code"],
+      ]},
+      { key: "model", label: "Modèle", type: "select", options: [
+        ["inherit", "Hérité de la session (défaut)"],
+        ["haiku", "haiku — rapide et économique (tri, exploration)"],
+        ["sonnet", "sonnet — équilibré"],
+        ["opus", "opus — maximum de profondeur"],
+      ]},
+    ],
+    check: f => [
+      { ok: !!(f.nom || "").trim(), msg: "nom : il devient le fichier et l'identité de l'agent" },
+      { ok: (f.mission || "").length >= 30, msg: "mission : assez précise pour que le déclenchement automatique fonctionne (la description est le déclencheur)" },
+    ],
+    learn: [
+      "Le sous-agent travaille dans SON contexte : il peut lire 50 fichiers, votre conversation ne reçoit que sa conclusion.",
+      "La description du frontmatter pilote la délégation automatique — écrivez-la comme une condition (« Utiliser quand… »).",
+      "Limiter les outils n'est pas de la méfiance, c'est du design : un relecteur qui ne PEUT PAS éditer est un relecteur fiable.",
+    ],
+    build: f => {
+      const slug = (f.nom || "mon-agent").toLowerCase().trim().replace(/\s+/g, "-");
+      const tools = { ro: "Read, Grep, Glob", rb: "Read, Grep, Glob, Bash", all: "" }[f.tools || "ro"];
+      return `--- FICHIER : .claude/agents/${slug}.md ---
+
+---
+name: ${slug}
+description: ${(f.mission || "").split(/[.!\n]/)[0] || "[mission en une phrase]"}. Utiliser pour toute tâche correspondante.${tools ? `
+tools: ${tools}` : ""}${f.model && f.model !== "inherit" ? `
+model: ${f.model}` : ""}
+---
+
+Tu es ${slug}, un agent spécialisé.
+
+Mission : ${f.mission || "[décrivez la mission complète]"}
+
+Méthode :
+1. Explore d'abord ce qui est pertinent pour ta mission.
+2. Travaille de façon autonome, sans poser de questions intermédiaires.
+3. Rends une conclusion structurée et actionnable : constats classés par
+   importance, et UNE recommandation prioritaire.
+4. Termine par une leçon pédagogique : qu'est-ce que ton commanditaire
+   (un vibe coder) devrait retenir de cette analyse ?
+
+--- INSTALLATION ---
+
+Enregistrez dans .claude/agents/${slug}.md (projet) ou ~/.claude/agents/ (perso).
+Vérifiez avec /agents · Invocation : demandez une tâche qui correspond à la
+description, ou explicitement : « utilise l'agent ${slug} pour… »`;
+    },
+  },
+  {
+    id: "fclaudemd", name: "Forge de CLAUDE.md", cat: "artefact",
+    desc: "Génère le squelette de CLAUDE.md de votre projet selon les bonnes pratiques officielles (< 200 lignes, spécifique, impératif).",
+    fields: [
+      { key: "projet", label: "Le projet (2-3 lignes)", type: "textarea", ph: "ex. App de réservation pour mon association. Frontend vanilla JS, backend Node/Express, base SQLite, déployé sur Render." },
+      { key: "conv", label: "Vos conventions", type: "input", ph: "ex. textes en français, indentation 2 espaces, pas de framework CSS" },
+      { key: "cmds", label: "Commandes utiles (lancer / tester / déployer)", type: "input", ph: "ex. npm run dev · npm test · git push (auto-déploie)" },
+    ],
+    learn: [
+      "CLAUDE.md est chargé à CHAQUE session : chaque ligne coûte du contexte en permanence — d'où la cible < 200 lignes.",
+      "Spécifique bat vague : « indentation 2 espaces » fonctionne, « code propre » ne veut rien dire pour un modèle.",
+      "Pour le volumineux : imports @docs/conventions.md, et .claude/rules/ avec frontmatter paths pour les règles par dossier.",
+    ],
+    build: f => `--- FICHIER : CLAUDE.md (racine du projet) ---
+
+# ${(f.projet || "").split(/[.\n]/)[0] || "[Nom du projet]"}
+
+${f.projet || "[Description : quoi, pour qui, stack]"}
+
+## Conventions
+${(f.conv || "[vos conventions]").split(/[,·;]/).map(c => "- " + c.trim()).join("\n")}
+
+## Commandes
+${(f.cmds || "[lancer / tester / déployer]").split(/[·;]/).map(c => "- " + c.trim()).join("\n")}
+
+## Façon de travailler avec moi
+- Je suis un vibe coder expérimenté, non-développeur : explique les choix
+  techniques simplement, définis le jargon à la première occurrence.
+- Propose un plan avant tout changement structurel ; pour les petites
+  retouches, agis directement.
+- Ne supprime jamais une fonctionnalité sans me demander.
+- Livre du code complet et fonctionnel, jamais de fragments à assembler.
+- Après chaque session significative : un résumé de ce que j'ai appris.
+
+## Interdits
+- Ne jamais committer .env ni aucun secret.
+- Ne jamais pousser directement sur main : toujours une branche + PR.
+
+--- ENSUITE ---
+Relisez, coupez ce qui ne sert pas, et committez. /init dans Claude Code
+peut aussi générer une base à fusionner avec celle-ci. /memory pour l'éditer.`,
+  },
+  {
+    id: "fmcp", name: "Forge de connexion MCP", cat: "artefact",
+    desc: "Génère la commande claude mcp add exacte (transport, portée) et le rituel de vérification sécurité.",
+    fields: [
+      { key: "nom", label: "Nom du serveur", type: "input", ph: "ex. github" },
+      { key: "url", label: "URL ou commande du serveur", type: "input", ph: "ex. https://api.githubcopilot.com/mcp/" },
+      { key: "transport", label: "Transport", type: "select", options: [
+        ["http", "HTTP — serveur distant (le plus courant)"],
+        ["sse", "SSE — serveur distant en Server-Sent Events"],
+        ["stdio", "stdio — serveur local exécuté par Claude"],
+      ]},
+      { key: "scope", label: "Portée", type: "select", options: [
+        ["local", "local — vous, ce projet (défaut)"],
+        ["project", "project — .mcp.json commité, toute l'équipe"],
+        ["user", "user — vous, tous vos projets"],
+      ]},
+    ],
+    check: f => [
+      { ok: !!(f.nom || "").trim() && !!(f.url || "").trim(), msg: "nom + URL/commande requis" },
+      { ok: f.scope !== "project" || true, msg: "portée project = le serveur sera proposé à toute personne qui clone le dépôt" },
+    ],
+    learn: [
+      "Portée local : ~/.claude (vous, ce projet) · project : .mcp.json commité (équipe) · user : tous vos projets.",
+      "L'authentification OAuth se fait en session via /mcp — ne mettez jamais un token dans un fichier commité.",
+      "Chaque serveur = du pouvoir d'agir pour l'IA : compte aux droits minimaux, et méfiance avec les serveurs non officiels.",
+    ],
+    build: f => `--- TERMINAL ---
+
+claude mcp add --transport ${f.transport || "http"}${(f.scope && f.scope !== "local") ? ` --scope ${f.scope}` : ""} ${f.nom || "mon-serveur"} ${f.url || "[url-ou-commande]"}
+
+--- VÉRIFICATION (dans Claude Code) ---
+
+/mcp                     → état de la connexion, OAuth si nécessaire
+claude mcp list          → inventaire de vos serveurs
+
+--- RITUEL SÉCURITÉ AVANT PREMIER USAGE ---
+
+Demandez à Claude : « Liste tous les outils exposés par ${f.nom || "ce serveur"},
+et pour chacun : lecture ou écriture ? Quel est le pire scénario si un prompt
+malveillant l'utilisait ? » — décidez ensuite ce que vous gardez activé (/mcp
+permet de désactiver serveur par serveur).${f.scope === "project" ? `
+
+Note : en portée project, .mcp.json est commité — toute l'équipe héritera de
+cette connexion (chacun fera sa propre auth).` : ""}`,
   },
 ];
 
