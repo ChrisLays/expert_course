@@ -1,0 +1,850 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>VibeLab — Compagnon de vibe coding</title>
+<meta name="description" content="Apprendre à mieux vibecoder avec Claude : constellation de compétences, forge de prompts, missions à accomplir dans Claude. 100 % local, sans IA embarquée." />
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root {
+    --bg: #0B0E1A; --bg2: #111527; --card: #151A30; --card2: #1B2140;
+    --line: rgba(148,163,255,0.14); --line-strong: rgba(148,163,255,0.32);
+    --txt: #E6E9F8; --txt2: #9AA3C7; --txt3: #6B7399;
+    --cyan: #5EE6D0; --amber: #F2B450; --violet: #A78BFA; --rose: #F472B6;
+    --ok: #4ADE80;
+    --mono: 'JetBrains Mono', monospace;
+    --r: 16px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--txt);
+    font-family: 'Space Grotesk', sans-serif;
+    min-height: 100vh; overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: rgba(167,139,250,0.3); }
+  button { font-family: inherit; }
+
+  #bg { position: fixed; inset: 0; z-index: 0; }
+  .veil { position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    background: radial-gradient(ellipse 90% 70% at 50% 0%, rgba(167,139,250,0.07), transparent 60%),
+                radial-gradient(ellipse 70% 60% at 85% 100%, rgba(94,230,208,0.05), transparent 60%); }
+
+  .shell { position: relative; z-index: 2; max-width: 1280px; margin: 0 auto; padding: 0 clamp(14px, 3vw, 36px) 80px; }
+
+  /* ── header ── */
+  header {
+    display: flex; align-items: center; justify-content: space-between; gap: 14px;
+    padding: 22px 0 16px; flex-wrap: wrap;
+  }
+  .brand { display: flex; align-items: center; gap: 13px; }
+  .brand-orb {
+    width: 42px; height: 42px; border-radius: 50%; position: relative; flex-shrink: 0;
+    background: conic-gradient(from 200deg, var(--cyan), var(--violet), var(--amber), var(--cyan));
+    animation: spin 14s linear infinite;
+  }
+  .brand-orb::after { content: ''; position: absolute; inset: 4px; border-radius: 50%; background: var(--bg); }
+  .brand-orb::before { content: ''; position: absolute; inset: -8px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(167,139,250,0.35), transparent 70%); }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .brand h1 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
+  .brand h1 span { background: linear-gradient(90deg, var(--cyan), var(--violet)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .brand small { display: block; font-family: var(--mono); font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--txt3); margin-top: 2px; }
+
+  .hud { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .level { text-align: right; }
+  .level .lname { font-size: 13.5px; font-weight: 600; color: var(--txt); }
+  .level .lxp { font-family: var(--mono); font-size: 10.5px; color: var(--txt3); margin-top: 1px; }
+  .xpbar { width: 150px; height: 7px; border-radius: 99px; background: rgba(255,255,255,0.07); overflow: hidden; }
+  .xpbar i { display: block; height: 100%; border-radius: 99px; width: 0%;
+    background: linear-gradient(90deg, var(--cyan), var(--violet)); transition: width 600ms cubic-bezier(.2,.8,.2,1); }
+
+  /* ── tabs ── */
+  .tabs { display: inline-flex; gap: 6px; padding: 5px; border-radius: 99px;
+    background: rgba(255,255,255,0.04); border: 1px solid var(--line); margin: 6px 0 22px; }
+  .tab {
+    border: none; cursor: pointer; border-radius: 99px; padding: 9px 20px;
+    font-size: 13.5px; font-weight: 600; color: var(--txt2); background: transparent;
+    transition: all 200ms;
+  }
+  .tab.active { color: #0B0E1A; background: linear-gradient(90deg, var(--cyan), #8BE9FD); }
+  .tab[data-tab="forge"].active { background: linear-gradient(90deg, var(--amber), #F8D08A); }
+
+  .intro { max-width: 660px; margin: 0 0 18px; color: var(--txt2); font-size: 14.5px; line-height: 1.65; }
+  .intro b { color: var(--txt); }
+
+  /* ── constellation ── */
+  .sky {
+    position: relative; border-radius: 24px; border: 1px solid var(--line);
+    background: radial-gradient(ellipse 80% 90% at 50% 40%, rgba(27,33,64,0.55), rgba(13,16,32,0.7));
+    overflow: hidden;
+  }
+  .sky svg { display: block; width: 100%; height: auto; }
+  .edge { stroke: var(--line-strong); stroke-width: 1.4; stroke-dasharray: 3 6; }
+  .edge.lit { stroke-dasharray: none; stroke-width: 2; filter: drop-shadow(0 0 6px currentColor); opacity: 0.9; }
+  .star { cursor: pointer; }
+  .star .halo { opacity: 0; transition: opacity 300ms; }
+  .star:hover .halo, .star.done .halo { opacity: 1; }
+  .star .core { transition: all 300ms; }
+  .star text { font-family: 'Space Grotesk', sans-serif; fill: var(--txt2); font-size: 13px; font-weight: 500;
+    text-anchor: middle; pointer-events: none; }
+  .star.done text { fill: var(--txt); font-weight: 600; }
+  .star .num { font-family: var(--mono); font-size: 9px; fill: var(--txt3); }
+  .hub-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.25em; fill: var(--txt2); text-anchor: middle; }
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; padding: 14px 20px; border-top: 1px solid var(--line);
+    font-size: 12.5px; color: var(--txt2); }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .legend i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+
+  /* ── forge ── */
+  .forge-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 16px; }
+  .cmd {
+    border: 1px solid var(--line); border-radius: var(--r); background: linear-gradient(170deg, var(--card), var(--bg2));
+    padding: 20px 20px 18px; display: flex; flex-direction: column; gap: 12px;
+    transition: border-color 250ms, transform 250ms;
+  }
+  .cmd:hover { border-color: rgba(242,180,80,0.4); transform: translateY(-2px); }
+  .cmd-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .cmd-name { font-family: var(--mono); font-size: 15px; font-weight: 600; color: var(--amber); }
+  .cmd-badge { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--txt3); border: 1px solid var(--line); border-radius: 99px; padding: 3px 9px; }
+  .cmd-badge.used { color: var(--ok); border-color: rgba(74,222,128,0.4); }
+  .cmd p { margin: 0; font-size: 13.5px; line-height: 1.55; color: var(--txt2); }
+  .cmd label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--txt3); }
+  .cmd textarea, .cmd input {
+    width: 100%; border-radius: 10px; border: 1px solid var(--line); background: rgba(0,0,0,0.25);
+    color: var(--txt); font-family: 'Space Grotesk', sans-serif; font-size: 13.5px; padding: 10px 12px;
+    resize: vertical; min-height: 38px; outline: none;
+  }
+  .cmd textarea { min-height: 70px; }
+  .cmd textarea:focus, .cmd input:focus { border-color: rgba(242,180,80,0.5); }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    border: none; cursor: pointer; border-radius: 11px; padding: 11px 18px;
+    font-size: 13.5px; font-weight: 600; transition: transform 150ms, filter 200ms;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-amber { background: linear-gradient(90deg, var(--amber), #F8D08A); color: #1A1206; }
+  .btn-violet { background: linear-gradient(90deg, var(--violet), #C4B5FD); color: #161029; }
+  .btn-ghost { background: rgba(255,255,255,0.06); color: var(--txt2); border: 1px solid var(--line); }
+  .btn-ok { background: rgba(74,222,128,0.15); color: var(--ok); border: 1px solid rgba(74,222,128,0.4); }
+  .btn:hover { filter: brightness(1.08); }
+
+  /* ── panel ── */
+  .scrim { position: fixed; inset: 0; z-index: 40; background: rgba(5,7,15,0.6); backdrop-filter: blur(3px);
+    opacity: 0; pointer-events: none; transition: opacity 300ms; }
+  .scrim.open { opacity: 1; pointer-events: auto; }
+  .panel {
+    position: fixed; top: 0; right: 0; bottom: 0; z-index: 50; width: min(540px, 100vw);
+    background: linear-gradient(180deg, #141A33, #0E1224);
+    border-left: 1px solid var(--line); box-shadow: -30px 0 80px rgba(0,0,0,0.5);
+    transform: translateX(105%); transition: transform 380ms cubic-bezier(.2,.8,.2,1);
+    display: flex; flex-direction: column;
+  }
+  .panel.open { transform: none; }
+  .panel-head { padding: 22px 26px 16px; border-bottom: 1px solid var(--line); display: flex; gap: 14px; align-items: flex-start; }
+  .panel-orb { width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0; position: relative; }
+  .panel-orb::after { content: ''; position: absolute; inset: -9px; border-radius: 50%; opacity: 0.5;
+    background: radial-gradient(circle, currentColor, transparent 70%); }
+  .panel-kicker { font-family: var(--mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 5px; }
+  .panel-head h2 { margin: 0; font-size: 21px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.2; }
+  .panel-close { margin-left: auto; flex-shrink: 0; width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--line);
+    background: rgba(255,255,255,0.04); color: var(--txt2); cursor: pointer; font-size: 17px; }
+  .panel-body { flex: 1; overflow-y: auto; padding: 22px 26px 30px; }
+  .panel-body h3 { font-size: 12px; font-family: var(--mono); letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--txt3); margin: 26px 0 10px; display: flex; align-items: center; gap: 9px; }
+  .panel-body h3::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+  .panel-body h3:first-child { margin-top: 0; }
+  .lesson { font-size: 14.5px; line-height: 1.7; color: var(--txt2); }
+  .lesson p { margin: 0 0 12px; }
+  .lesson b { color: var(--txt); font-weight: 600; }
+  .lesson .visual { display: flex; gap: 8px; align-items: stretch; margin: 14px 0; flex-wrap: wrap; }
+  .lesson .vbox { flex: 1; min-width: 110px; border: 1px solid var(--line); border-radius: 11px; padding: 10px 12px;
+    background: rgba(255,255,255,0.03); text-align: center; }
+  .lesson .vbox b { display: block; font-size: 13px; margin-bottom: 3px; }
+  .lesson .vbox span { font-size: 11.5px; color: var(--txt3); line-height: 1.4; display: block; }
+  .lesson .varrow { align-self: center; color: var(--txt3); font-size: 15px; }
+
+  .mission { border: 1px solid rgba(167,139,250,0.3); border-radius: 14px; padding: 16px;
+    background: linear-gradient(165deg, rgba(167,139,250,0.08), rgba(167,139,250,0.02)); }
+  .mission-steps { margin: 0 0 14px; padding-left: 20px; font-size: 13.8px; line-height: 1.65; color: var(--txt2); }
+  .mission-steps li { margin: 4px 0; }
+  .mission-steps li::marker { color: var(--violet); font-weight: 600; }
+  .promptbox { position: relative; border-radius: 11px; background: rgba(0,0,0,0.35); border: 1px solid var(--line);
+    padding: 13px 14px; font-family: var(--mono); font-size: 12px; line-height: 1.65; color: #C9D2F0;
+    white-space: pre-wrap; max-height: 240px; overflow-y: auto; }
+  .promptbox .ph { color: var(--amber); }
+  .mission .btn { margin-top: 12px; width: 100%; }
+
+  .checks { display: grid; gap: 9px; }
+  .check { display: flex; gap: 11px; align-items: flex-start; padding: 11px 13px; border-radius: 11px;
+    border: 1px solid var(--line); background: rgba(255,255,255,0.03); cursor: pointer; transition: border-color 200ms; }
+  .check:hover { border-color: var(--line-strong); }
+  .check input { margin-top: 2px; accent-color: var(--ok); width: 16px; height: 16px; flex-shrink: 0; }
+  .check span { font-size: 13.5px; line-height: 1.5; color: var(--txt2); }
+  .complete-btn { width: 100%; margin-top: 16px; padding: 14px; font-size: 14.5px; }
+  .complete-btn:disabled { opacity: 0.35; cursor: not-allowed; filter: none; }
+  .done-note { display: flex; align-items: center; gap: 10px; margin-top: 16px; padding: 13px 15px; border-radius: 11px;
+    background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.35); color: var(--ok); font-size: 13.5px; font-weight: 600; }
+
+  /* toast */
+  .toast { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%) translateY(80px); z-index: 90;
+    background: #1E2542; border: 1px solid var(--line-strong); color: var(--txt); border-radius: 12px;
+    padding: 12px 20px; font-size: 13.5px; font-weight: 500; box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+    transition: transform 350ms cubic-bezier(.2,.8,.2,1); max-width: 90vw; text-align: center; }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast b { color: var(--cyan); }
+
+  footer { margin-top: 36px; font-size: 12.5px; line-height: 1.7; color: var(--txt3); max-width: 720px; }
+  footer b { color: var(--txt2); }
+  .reset { background: none; border: none; color: var(--txt3); font-size: 11.5px; cursor: pointer; text-decoration: underline; padding: 0; margin-top: 8px; }
+
+  @media (max-width: 700px) {
+    .hud .xpbar { width: 110px; }
+    .panel { width: 100vw; }
+    .legend { gap: 12px; padding: 12px 14px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<div class="veil"></div>
+
+<div class="shell">
+  <header>
+    <div class="brand">
+      <div class="brand-orb"></div>
+      <div>
+        <h1>Vibe<span>Lab</span></h1>
+        <small>Compagnon de vibe coding</small>
+      </div>
+    </div>
+    <div class="hud">
+      <div class="level">
+        <div class="lname" id="lvlName">—</div>
+        <div class="lxp" id="lvlXp">0 XP</div>
+      </div>
+      <div class="xpbar"><i id="xpFill"></i></div>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab active" data-tab="sky" role="tab">✦ Constellation</button>
+    <button class="tab" data-tab="forge" role="tab">⚒ La Forge</button>
+  </nav>
+
+  <!-- ════ CONSTELLATION ════ -->
+  <section id="view-sky">
+    <p class="intro">Chaque étoile est une <b>compétence de vibe coder</b> : une mini-leçon, puis une <b>mission à accomplir dans Claude</b> (claude.ai ou Claude Code). Validez vos missions pour allumer la constellation — VibeLab forge les prompts, <b>Claude fait le travail, vous comprenez ce qui se passe</b>.</p>
+    <div class="sky">
+      <svg id="skySvg" viewBox="0 0 1200 760" aria-label="Constellation des compétences"></svg>
+      <div class="legend">
+        <span><i style="background:var(--cyan)"></i> Fondations d'une app</span>
+        <span><i style="background:var(--amber)"></i> L'art du prompt</span>
+        <span><i style="background:var(--violet)"></i> Outils Claude</span>
+        <span><i style="background:var(--txt3)"></i> ◌ à explorer &nbsp;·&nbsp; ● mission validée</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ FORGE ════ -->
+  <section id="view-forge" hidden>
+    <p class="intro">La Forge fabrique des <b>prompts experts prêts à coller</b> dans Claude ou Claude Code. Décrivez votre situation, générez, copiez — et observez la différence avec un prompt improvisé. C'est aussi comme ça qu'on apprend à mieux prompter.</p>
+    <div class="forge-grid" id="forgeGrid"></div>
+  </section>
+
+  <footer>
+    <b>Comment ça marche :</b> VibeLab n'embarque aucune IA et n'envoie rien nulle part — votre progression vit dans ce navigateur (localStorage). Les missions et les commandes produisent des prompts que vous exécutez vous-même dans Claude (claude.ai) ou Claude Code. L'objectif : acquérir les réflexes et le vocabulaire d'un développeur web… en laissant le code à Claude.
+    <br /><button class="reset" id="resetBtn">Réinitialiser ma progression</button>
+  </footer>
+</div>
+
+<!-- panel -->
+<div class="scrim" id="scrim"></div>
+<aside class="panel" id="panel" role="dialog" aria-modal="true">
+  <div class="panel-head">
+    <div class="panel-orb" id="pOrb"></div>
+    <div>
+      <div class="panel-kicker" id="pKicker"></div>
+      <h2 id="pTitle"></h2>
+    </div>
+    <button class="panel-close" id="pClose" aria-label="Fermer">✕</button>
+  </div>
+  <div class="panel-body" id="pBody"></div>
+</aside>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+
+/* ════════════════════════════════════════════════════════
+   VibeLab — compagnon de vibe coding. 100 % statique :
+   aucune IA embarquée, les missions s'exécutent dans Claude.
+   ════════════════════════════════════════════════════════ */
+
+/* ── fond animé : orbes & cercles abstraits ── */
+(function () {
+  const cv = document.getElementById('bg');
+  const ctx = cv.getContext('2d');
+  let W, H;
+  const ORBS = [];
+  const COLS = ['94,230,208', '167,139,250', '242,180,80', '244,114,182'];
+  function resize() {
+    W = cv.width = innerWidth * devicePixelRatio;
+    H = cv.height = innerHeight * devicePixelRatio;
+    cv.style.width = innerWidth + 'px'; cv.style.height = innerHeight + 'px';
+  }
+  resize(); addEventListener('resize', resize);
+  for (let i = 0; i < 22; i++) {
+    ORBS.push({
+      x: Math.random(), y: Math.random(),
+      r: (20 + Math.random() * 130) * devicePixelRatio,
+      c: COLS[i % COLS.length],
+      sp: 0.00004 + Math.random() * 0.00012,
+      ph: Math.random() * Math.PI * 2,
+      ring: Math.random() > 0.55,
+    });
+  }
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let last = 0;
+  function frame(t) {
+    if (!reduced || !last) {
+      ctx.clearRect(0, 0, W, H);
+      ORBS.forEach(o => {
+        const x = (o.x + Math.sin(t * o.sp + o.ph) * 0.06) * W;
+        const y = (o.y + Math.cos(t * o.sp * 0.8 + o.ph) * 0.06) * H;
+        if (o.ring) {
+          ctx.strokeStyle = `rgba(${o.c},0.10)`;
+          ctx.lineWidth = 1.2 * devicePixelRatio;
+          ctx.beginPath(); ctx.arc(x, y, o.r, 0, Math.PI * 2); ctx.stroke();
+        } else {
+          const g = ctx.createRadialGradient(x, y, 0, x, y, o.r);
+          g.addColorStop(0, `rgba(${o.c},0.07)`);
+          g.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = g;
+          ctx.beginPath(); ctx.arc(x, y, o.r, 0, Math.PI * 2); ctx.fill();
+        }
+      });
+      last = t;
+    }
+    if (!reduced) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+
+/* ── données : les 12 étoiles ── */
+const BRANCHES = {
+  fond:   { label: 'Fondations', color: 'var(--cyan)',   raw: '#5EE6D0' },
+  prompt: { label: "L'art du prompt", color: 'var(--amber)',  raw: '#F2B450' },
+  claude: { label: 'Outils Claude', color: 'var(--violet)', raw: '#A78BFA' },
+};
+
+const NODES = [
+  /* ─ Fondations ─ */
+  {
+    id: 'anatomie', branch: 'fond', x: 430, y: 310, title: "Anatomie d'une app web",
+    lesson: `<p>Toute application web tient en <b>trois étages</b>. Pensez à un restaurant :</p>
+      <div class="visual">
+        <div class="vbox"><b>Frontend</b><span>la salle : ce que voit et touche l'utilisateur (pages, boutons)</span></div>
+        <div class="varrow">⇄</div>
+        <div class="vbox"><b>Backend</b><span>la cuisine : la logique, les règles, les calculs</span></div>
+        <div class="varrow">⇄</div>
+        <div class="vbox"><b>Données</b><span>le garde-manger : ce qui doit survivre (comptes, contenus)</span></div>
+      </div>
+      <p>Certaines apps n'ont <b>que la salle</b> (un site statique, un artifact Claude) ; d'autres ont les trois. Savoir situer chaque demande dans cet étage-là, c'est déjà parler le langage des développeurs — et prompter beaucoup plus juste.</p>`,
+    steps: ["Ouvrez Claude (claude.ai)", "Collez le prompt en remplaçant le passage entre crochets", "Lisez le schéma obtenu et posez une question sur l'étage le plus flou pour vous"],
+    prompt: `Voici mon idée d'application : [décrivez votre app en 2-3 phrases].
+
+Agis comme un architecte web pédagogue. Présente-moi l'architecture de cette app en 3 couches (frontend / backend / données) sous forme de schéma texte simple, puis pour chaque couche : ce qu'elle contient concrètement dans MON cas, et si on peut s'en passer dans une première version. Termine par la version la plus simple possible qui marche (MVP). Je ne suis pas développeur : zéro jargon non expliqué.`,
+    checks: ["Je sais dire ce qui est frontend, backend et données dans MON projet", "Je sais si mon MVP a besoin d'un backend ou pas"],
+  },
+  {
+    id: 'frontend', branch: 'fond', x: 300, y: 250, title: 'Le frontend',
+    lesson: `<p>Le frontend, c'est tout ce qui s'exécute <b>dans le navigateur</b> de l'utilisateur. Trois matériaux :</p>
+      <div class="visual">
+        <div class="vbox"><b>HTML</b><span>le squelette : la structure et le contenu</span></div>
+        <div class="vbox"><b>CSS</b><span>la peau : couleurs, mise en page, animations</span></div>
+        <div class="vbox"><b>JavaScript</b><span>les muscles : interactions, logique, mouvement</span></div>
+      </div>
+      <p>Deux notions à connaître : les <b>composants</b> (des briques d'interface réutilisables — un bouton, une carte) et <b>l'état</b> (ce dont l'interface se souvient : l'onglet actif, le panier). Quand un rendu vous déçoit, nommer la brique fautive (« le composant carte », « l'état du filtre ») rend vos demandes de retouche dix fois plus précises.</p>`,
+    steps: ["Ouvrez un artifact ou une page que Claude vous a déjà créés (ou demandez-en une petite)", "Collez le prompt dans la même conversation", "Repérez dans la réponse : où est le HTML, le CSS, le JS, et où vit « l'état »"],
+    prompt: `Reprends le code de l'interface que tu viens de créer pour moi. Fais-m'en la visite guidée comme à quelqu'un qui ne code pas :
+
+1. Découpe-le en zones : structure (HTML), style (CSS), comportement (JavaScript).
+2. Liste les "composants" que tu y as créés et à quoi sert chacun.
+3. Montre-moi où vit "l'état" (ce dont l'interface se souvient) et ce qui le modifie.
+4. Donne-moi 3 exemples de phrases précises que je pourrais te dire pour modifier tel ou tel composant.`,
+    checks: ["Je sais distinguer structure / style / comportement dans une page", "Je sais nommer un composant précis quand je demande une retouche"],
+  },
+  {
+    id: 'backend', branch: 'fond', x: 185, y: 330, title: 'Backend & API',
+    lesson: `<p>Le backend tourne <b>sur un serveur</b>, pas chez l'utilisateur. On y met ce qui doit être <b>fiable, secret ou partagé</b> : vérifier un mot de passe, enregistrer une commande, appeler un service payant avec une clé secrète.</p>
+      <p>Frontend et backend se parlent via une <b>API</b> : un menu d'actions autorisées. Le frontend commande (« crée ce compte »), le backend répond — généralement en <b>JSON</b>, un format texte structuré que machines et humains lisent facilement.</p>
+      <p>Réflexe de vibe coder : tout ce qui est dans le frontend est <b>visible et modifiable</b> par l'utilisateur. Une clé d'API, un prix, une règle de droit d'accès n'ont rien à faire côté navigateur.</p>`,
+    steps: ["Ouvrez Claude", "Collez le prompt complété avec votre projet", "Notez ce qui DOIT être côté serveur dans votre app, et pourquoi"],
+    prompt: `Mon application : [décrivez votre app]. Fonctionnalités prévues : [listez-les].
+
+Pour chaque fonctionnalité, dis-moi si elle peut vivre uniquement dans le navigateur (frontend) ou si elle exige un serveur (backend), et surtout POURQUOI — en particulier tout ce qui touche aux secrets (clés d'API), à l'argent, ou aux données partagées entre utilisateurs. Puis montre-moi à quoi ressemblerait l'API de mon app : la liste des "commandes" que le frontend passerait au serveur, en français d'abord, puis en exemple JSON.`,
+    checks: ["Je sais pourquoi une clé d'API ne doit jamais être dans le frontend", "Je peux décrire l'API de mon app comme une liste de commandes"],
+  },
+  {
+    id: 'data', branch: 'fond', x: 150, y: 465, title: 'Données & stockage',
+    lesson: `<p>Question clé : <b>que doit-il rester quand on ferme l'onglet ?</b></p>
+      <div class="visual">
+        <div class="vbox"><b>Rien</b><span>tout en mémoire — un jeu, une démo</span></div>
+        <div class="vbox"><b>Sur cet appareil</b><span>localStorage : préférences, brouillons, progression</span></div>
+        <div class="vbox"><b>Partout</b><span>base de données sur un serveur : comptes, contenus partagés</span></div>
+      </div>
+      <p>Les bases de données rangent l'information en <b>tables</b> (comme des feuilles de tableur reliées entre elles). Avant de coder, décrire ses données — « un utilisateur a plusieurs projets, un projet a plusieurs notes » — est le plan que Claude transformera en schéma propre.</p>`,
+    steps: ["Ouvrez Claude", "Collez le prompt complété", "Vérifiez que vous comprenez ce qui survit à un refresh dans votre app actuelle"],
+    prompt: `Mon application : [décrivez votre app].
+
+1. Liste toutes les informations que mon app manipule, et classe-les : éphémère (perdable), locale (cet appareil suffit), ou partagée (base de données obligatoire).
+2. Pour les données partagées, propose-moi un mini-schéma en français : les "tables", ce qu'elles contiennent, et comment elles sont reliées (du type "un utilisateur possède plusieurs projets").
+3. Explique-moi ce qui se passerait concrètement pour mes utilisateurs si je restais en stockage local au lieu d'une vraie base.`,
+    checks: ["Je sais ce qui survit à un refresh dans mon app et pourquoi", "Je peux décrire mes données en tables reliées, en français"],
+  },
+  {
+    id: 'ship', branch: 'fond', x: 245, y: 575, title: 'Git & mise en ligne',
+    lesson: `<p><b>Git</b> est la machine à remonter le temps du code : chaque <b>commit</b> est une photo datée et commentée du projet. Une <b>branche</b> permet d'essayer sans casser la version qui marche ; une <b>pull request (PR)</b> propose de fusionner l'essai dans la version principale. GitHub héberge tout ça en ligne.</p>
+      <p><b>Déployer</b>, c'est copier le code sur une machine accessible au monde : trivial pour un site statique (Render, Netlify, GitHub Pages servent vos fichiers tels quels), un peu plus riche dès qu'il y a un backend à faire tourner.</p>
+      <p>Bonne nouvelle : Claude Code manie git pour vous. Mais comprendre commit / branche / PR vous permet de <b>relire et décider</b>, au lieu de subir.</p>`,
+    steps: ["Ouvrez Claude (ou Claude Code si vous avez un dépôt)", "Collez le prompt", "Gardez le glossaire obtenu sous la main pour vos prochaines sessions"],
+    prompt: `Raconte-moi le voyage complet de mon code, de l'idée jusqu'à l'URL publique, pour une app comme la mienne : [décrivez votre app et où elle est hébergée si vous le savez].
+
+Étapes attendues : écriture du code → commit → branche → pull request → fusion → déploiement. Pour chaque étape : une métaphore simple, ce que JE fais concrètement (même si c'est Claude Code qui exécute), et l'erreur classique du débutant. Termine par un glossaire de 8 termes git/déploiement que je recroiserai tout le temps.`,
+    checks: ["Je sais expliquer commit, branche et pull request avec mes mots", "Je sais comment mon app passe de mon dépôt à une URL en ligne"],
+  },
+
+  /* ─ L'art du prompt ─ */
+  {
+    id: 'prompt-anatomie', branch: 'prompt', x: 700, y: 525, title: "Anatomie d'un bon prompt",
+    lesson: `<p>Un prompt efficace répond à quatre questions — avant même d'être bien écrit :</p>
+      <div class="visual">
+        <div class="vbox"><b>Contexte</b><span>qui je suis, le projet, ce qui existe déjà</span></div>
+        <div class="vbox"><b>Objectif</b><span>le résultat attendu, pas la liste des étapes</span></div>
+        <div class="vbox"><b>Contraintes</b><span>limites, style, ce qu'il ne faut PAS faire</span></div>
+        <div class="vbox"><b>Format</b><span>la forme de la réponse : code complet, plan, tableau…</span></div>
+      </div>
+      <p>« Fais-moi un site de recettes » force Claude à inventer 50 décisions à votre place. « Site d'une page pour mes 12 recettes familiales, ambiance carnet manuscrit, sans compte utilisateur, livré en un seul fichier HTML » : mêmes 30 secondes d'écriture, résultat sans comparaison.</p>`,
+    steps: ["Retrouvez un de vos anciens prompts qui avait donné un résultat moyen", "Collez le prompt ci-dessous dans Claude avec votre ancien prompt dedans", "Envoyez la version réécrite dans une nouvelle conversation et comparez les deux résultats"],
+    prompt: `Voici un prompt que j'ai utilisé récemment : "[collez votre ancien prompt]".
+
+1. Analyse-le selon 4 critères : contexte fourni, objectif clair, contraintes posées, format de sortie demandé. Note chaque critère sur 5 avec une phrase d'explication.
+2. Liste les décisions que tu aurais dû inventer à ma place à cause des manques.
+3. Réécris-le en version complète — en inventant des hypothèses plausibles entre [crochets] là où il me manque des infos, pour que je n'aie plus qu'à les remplacer.`,
+    checks: ["J'ai comparé ancien et nouveau prompt sur un vrai résultat", "Je connais les 4 ingrédients et je sais lequel j'oublie le plus souvent"],
+  },
+  {
+    id: 'prompt-contexte', branch: 'prompt', x: 825, y: 615, title: 'Donner le pourquoi',
+    lesson: `<p>Claude travaille mieux quand il comprend <b>l'intention</b>, pas seulement la demande. Dire « ajoute un bouton export » force une interprétation ; dire « mes utilisateurs sont des profs qui veulent imprimer les résultats pour leurs élèves — ajoute un export » oriente cent micro-décisions (format, mise en page, libellé) dans le bon sens.</p>
+      <p>La formule magique : <b>« Je travaille sur [le projet] pour [ces gens]. Ils ont besoin de [ce que ça permet]. Avec ça en tête : [la demande]. »</b></p>
+      <p>Et précisez le <b>niveau d'initiative</b> attendu : « propose et justifie » quand vous explorez, « fais exactement ça, rien de plus » quand vous savez. Les deux sont valides — l'ambiguïté entre les deux est ce qui produit les résultats frustrants.</p>`,
+    steps: ["Choisissez une vraie petite demande pour votre projet en cours", "Envoyez-la d'abord brute dans Claude, notez le résultat", "Envoyez la version avec le prompt ci-dessous dans une nouvelle conversation, comparez"],
+    prompt: `Je travaille sur [votre projet] pour [qui sont les utilisateurs]. Ils ont besoin de [ce que ça leur permet de faire / le problème que ça règle].
+
+Avec ce contexte en tête : [votre demande].
+
+Contraintes : [ce qui est imposé — techno, style, budget temps]. Niveau d'initiative attendu : [au choix : "fais exactement ça sans extra" OU "propose mieux si tu vois mieux, en justifiant"].`,
+    checks: ["J'ai constaté la différence avec/sans contexte sur une vraie demande", "Je précise désormais le niveau d'initiative que j'attends"],
+  },
+  {
+    id: 'prompt-debug', branch: 'prompt', x: 960, y: 570, title: 'Itérer & débugger',
+    lesson: `<p>Quand ça casse, le réflexe gagnant tient en trois règles :</p>
+      <p><b>1. Tout donner.</b> Le message d'erreur <b>entier</b> (pas une paraphrase), ce que vous attendiez, ce qui s'est réellement passé, et ce que vous venez de changer.</p>
+      <p><b>2. Une chose à la fois.</b> « Corrige le bouton ET change les couleurs ET ajoute une page » = trois chantiers qui s'entremêlent. Itérez par petites demandes vérifiables.</p>
+      <p><b>3. Comprendre avant de corriger.</b> Demandez « explique la cause probable avant de proposer un correctif » : vous apprenez à chaque bug, et Claude corrige la cause plutôt que le symptôme. Si deux tentatives échouent, demandez un <b>diagnostic différent</b> plutôt qu'une troisième rustine.</p>`,
+    steps: ["Attendez votre prochain bug (il viendra 🙂) ou reprenez le dernier en date", "Remplissez le prompt ci-dessous — la commande /debug de la Forge le fait aussi", "Exigez l'explication de cause avant d'accepter le correctif"],
+    prompt: `J'ai un bug. Rapport complet :
+
+- Ce que j'attendais : [comportement attendu]
+- Ce qui se passe réellement : [comportement observé]
+- Message d'erreur exact (s'il y en a un) : [collez-le en entier]
+- Dernière modification avant l'apparition du bug : [ce qui a changé]
+
+Avant de corriger : explique-moi la cause probable en termes simples, et comment tu comptes la vérifier. Ensuite seulement, propose le correctif minimal — sans réécrire ce qui marche déjà.`,
+    checks: ["J'ai résolu un vrai bug avec ce rapport structuré", "J'ai demandé (et compris) la cause avant le correctif"],
+  },
+
+  /* ─ Outils Claude ─ */
+  {
+    id: 'claude-ai', branch: 'claude', x: 745, y: 295, title: 'Projects & Artifacts',
+    lesson: `<p>Sur <b>claude.ai</b>, deux outils transforment le chat en atelier :</p>
+      <p><b>Les Projects</b> : un espace de travail durable par projet, avec des <b>instructions personnalisées</b> (votre contexte, vos préférences — écrites une fois, appliquées à toutes les conversations du projet) et des <b>connaissances</b> (documents de référence que Claude consulte).</p>
+      <p><b>Les Artifacts</b> : quand Claude crée du contenu substantiel — une page web, une app interactive, un document — il apparaît dans un panneau dédié, modifiable par itérations et partageable. C'est votre premier atelier de vibe coding : une vraie app qui tourne, sans rien installer.</p>
+      <p>Le duo gagnant : un Project par produit, vos specs en connaissances, et les prototypes en artifacts.</p>`,
+    steps: ["Sur claude.ai, créez un Project dédié à votre app", "Collez le prompt ci-dessous dans une conversation du Project pour générer vos instructions personnalisées", "Copiez le résultat dans les instructions du Project, puis testez : demandez un prototype d'écran en artifact"],
+    prompt: `Aide-moi à rédiger les instructions personnalisées de mon Project Claude consacré à ce produit : [décrivez votre app, vos utilisateurs, votre niveau technique, vos préférences de style].
+
+Les instructions doivent tenir en moins de 250 mots et couvrir : qui je suis et mon niveau (non-développeur qui vibecode), le produit et ses utilisateurs, mes conventions (langue, ton, stack si connue), et comment je veux que tu travailles avec moi (expliquer les choix techniques simplement, demander avant les gros changements, livrer du code complet et fonctionnel).`,
+    checks: ["Mon Project existe avec des instructions personnalisées", "J'ai produit au moins un artifact fonctionnel dans ce Project"],
+  },
+  {
+    id: 'claude-code', branch: 'claude', x: 880, y: 225, title: 'Claude Code',
+    lesson: `<p><b>Claude Code</b>, c'est Claude en mode <b>agent</b> : au lieu de répondre dans un chat, il travaille directement <b>dans un vrai projet</b> — il lit vos fichiers, modifie le code, lance des commandes, fait des commits, ouvre des pull requests. Disponible en terminal, sur le web, en app desktop et dans les éditeurs de code.</p>
+      <p>La différence avec le chat : l'artifact est une pièce unique ; avec Claude Code vous construisez un <b>vrai dépôt</b> qui grandit, se versionne et se déploie. C'est l'étape d'après quand votre prototype devient un produit.</p>
+      <p>Votre rôle change aussi : vous devenez <b>directeur de travaux</b> — vous décrivez l'objectif, relisez ce qui est proposé, validez ou réorientez.</p>`,
+    steps: ["Ouvrez une session Claude Code sur un dépôt (le vôtre, ou celui d'un de vos projets générés)", "Collez le prompt ci-dessous tel quel", "Lisez la réponse en entier : c'est la carte de VOTRE projet"],
+    prompt: `Explore ce projet et fais-m'en la visite guidée pour non-développeur :
+
+1. À quoi sert chaque dossier et fichier important (en une ligne chacun).
+2. Par où "entre" l'application quand elle démarre, et le chemin d'une action utilisateur à travers le code.
+3. Les 3 fichiers que je dois connaître parce que tout passe par eux.
+4. Ce qui te semble fragile ou inhabituel dans ce projet, sans rien modifier pour l'instant.`,
+    checks: ["J'ai exploré un vrai dépôt avec Claude Code", "Je sais nommer les 3 fichiers clés de mon projet"],
+  },
+  {
+    id: 'skills', branch: 'claude', x: 1015, y: 280, title: 'Skills & commandes',
+    lesson: `<p>Trois façons d'apprendre vos habitudes à Claude Code, du plus simple au plus puissant :</p>
+      <p><b>CLAUDE.md</b> : un fichier à la racine du projet, lu au début de chaque session. Vos conventions, votre contexte, vos interdits — écrits une fois.</p>
+      <p><b>Les commandes slash</b> : tapez <b>/nom</b> pour déclencher un prompt enregistré. Les vôtres se créent en déposant un simple fichier markdown — votre /grillme ou /plan personnels, à un fichier près.</p>
+      <p><b>Les skills</b> : des dossiers d'instructions (et éventuellement de scripts) que Claude charge <b>quand la tâche s'y prête</b> — un savoir-faire spécialisé qu'on n'écrit qu'une fois et qui ne pollue pas les autres conversations.</p>`,
+    steps: ["Dans Claude Code, sur votre projet, collez le prompt ci-dessous", "Relisez le CLAUDE.md proposé et faites-le ajuster avant de l'accepter", "Bonus : demandez ensuite une commande slash personnalisée inspirée de la Forge"],
+    prompt: `Crée un fichier CLAUDE.md à la racine de ce projet, pensé pour un non-développeur qui vibecode.
+
+Il doit contenir : une description du projet en 3 lignes, les conventions à respecter (langue des textes, style de code, librairies déjà choisies), les commandes utiles (lancer, tester, déployer) si elles existent, et une section "Façon de travailler avec moi" : m'expliquer les choix techniques simplement, me proposer un plan avant les gros changements, ne jamais supprimer de fonctionnalité sans me demander.
+
+Propose-le-moi d'abord, on l'ajuste ensemble avant de l'enregistrer.`,
+    checks: ["Mon projet a un CLAUDE.md que j'ai relu et compris", "Je sais ce qu'est une commande slash et où elle vit"],
+  },
+  {
+    id: 'mcp', branch: 'claude', x: 1065, y: 420, title: 'MCP & connexions',
+    lesson: `<p>Par défaut, Claude ne voit que ce que vous lui collez. Le <b>MCP (Model Context Protocol)</b> est la prise universelle qui le branche au reste : un <b>serveur MCP</b> expose les outils d'un service — GitHub, Google Drive, une base de données, un outil interne — et Claude peut alors <b>lire et agir</b> dessus pendant la conversation.</p>
+      <p>Exemple concret : avec un MCP GitHub, Claude Code peut lister vos pull requests, lire les commentaires de revue, vérifier qu'un déploiement est passé — sans copier-coller.</p>
+      <p>Réflexe à acquérir : chaque connexion donne du <b>pouvoir d'agir</b> à l'IA. Avant de brancher, demandez-vous ce que l'outil pourra lire et modifier, et n'accordez que le nécessaire.</p>`,
+    steps: ["Ouvrez Claude ou Claude Code", "Collez le prompt complété avec vos outils du quotidien", "Identifiez LA connexion qui vous ferait gagner le plus de temps — c'est votre prochaine étape"],
+    prompt: `Mon flux de travail actuel : je vibecode avec Claude, mon code vit sur [GitHub / autre], je déploie sur [Render / Netlify / autre / je ne sais pas], et j'utilise au quotidien [vos outils : Drive, Notion, Slack…].
+
+1. Explique-moi ce qu'un serveur MCP permettrait concrètement pour 3 de ces outils : ce que Claude pourrait lire, ce qu'il pourrait faire, avec un exemple de scénario pour MON cas.
+2. Pour chacun, dis-moi aussi ce que je lui donnerais comme pouvoir, et la prudence à avoir.
+3. Recommande LA connexion par laquelle commencer, et pourquoi.`,
+    checks: ["Je sais expliquer ce qu'est un serveur MCP avec mes mots", "Je sais quelle connexion m'apporterait le plus — et ce qu'elle pourrait lire/modifier"],
+  },
+];
+
+const EDGES = [
+  ['hub','anatomie'], ['anatomie','frontend'], ['frontend','backend'], ['backend','data'], ['data','ship'],
+  ['hub','prompt-anatomie'], ['prompt-anatomie','prompt-contexte'], ['prompt-contexte','prompt-debug'],
+  ['hub','claude-ai'], ['claude-ai','claude-code'], ['claude-code','skills'], ['skills','mcp'],
+];
+const HUB = { x: 600, y: 405 };
+
+/* ── la Forge : commandes ── */
+const COMMANDS = [
+  {
+    id: 'grillme', name: '/grillme', desc: "Faites griller votre prompt avant de l'envoyer : critique sans pitié, note sur 10, version réécrite.",
+    fields: [{ key: 'p', label: 'Votre prompt à griller', type: 'textarea', ph: 'Collez ici le prompt que vous comptiez envoyer…' }],
+    build: f => `Agis comme un relecteur de prompts impitoyable mais constructif. Voici le prompt que je m'apprête à envoyer à une IA pour du vibe coding :
+
+---
+${f.p || '[votre prompt]'}
+---
+
+1. GRILLE-LE : passe-le au crible (contexte fourni ? objectif net ? contraintes posées ? format de sortie ? ambiguïtés ? décisions laissées au hasard ?). Sois précis et un peu piquant.
+2. NOTE-LE sur 10, avec la phrase qui justifie la note.
+3. RÉÉCRIS-LE en version irréprochable, en gardant mon intention. Mets entre [crochets] ce que toi seul ne peux pas savoir.
+4. Donne-moi LA leçon n°1 à retenir pour mes prochains prompts.`,
+  },
+  {
+    id: 'plan', name: '/plan', desc: "Transformez une idée de fonctionnalité en plan d'implémentation lisible — avant d'écrire la moindre ligne.",
+    fields: [
+      { key: 'app', label: 'Votre app (1 phrase)', type: 'input', ph: 'ex. un carnet de recettes familial en ligne' },
+      { key: 'feat', label: 'La fonctionnalité à planifier', type: 'textarea', ph: 'ex. permettre aux cousins de commenter chaque recette' },
+    ],
+    build: f => `Mon app : ${f.app || '[votre app]'}.
+Je veux ajouter : ${f.feat || '[la fonctionnalité]'}.
+
+Avant tout code, fais-moi un plan d'implémentation pour non-développeur :
+1. Reformule la fonctionnalité et pose les 3 questions qui changeraient le plan si je répondais différemment.
+2. Découpe en étapes ordonnées, chacune testable par moi ("tu sauras que ça marche quand…").
+3. Pour chaque étape : quelle couche est touchée (frontend / backend / données) et pourquoi.
+4. Signale ce qui est plus compliqué qu'il n'y paraît, et la version simplifiée si je veux aller vite.
+N'écris AUCUN code pour l'instant — on valide le plan d'abord.`,
+  },
+  {
+    id: 'debug', name: '/debug', desc: "Le rapport de bug parfait : Claude trouve la cause au lieu de poser des rustines.",
+    fields: [
+      { key: 'want', label: "Ce que j'attendais", type: 'input', ph: 'ex. le bouton enregistre la note' },
+      { key: 'got', label: 'Ce qui se passe réellement', type: 'input', ph: 'ex. rien ne se passe, la note disparaît' },
+      { key: 'err', label: "Message d'erreur (collez-le en entier, ou « aucun »)", type: 'textarea', ph: 'Uncaught TypeError: …' },
+    ],
+    build: f => `J'ai un bug. Rapport complet :
+
+- Attendu : ${f.want || '[comportement attendu]'}
+- Observé : ${f.got || '[comportement réel]'}
+- Message d'erreur exact : ${f.err || '[aucun]'}
+- Dernier changement avant le bug : [ce que vous venez de modifier]
+
+Méthode imposée :
+1. Explique-moi la cause probable en termes simples, et comment tu vas la vérifier.
+2. Propose le correctif MINIMAL — sans réécrire ce qui marche.
+3. Dis-moi comment vérifier moi-même que c'est réglé.
+4. Termine par : qu'est-ce que ce bug m'apprend pour éviter le suivant ?`,
+  },
+  {
+    id: 'explique', name: '/explique', desc: 'Faites-vous expliquer du code ou un concept exactement à votre niveau — avec quiz de vérification.',
+    fields: [{ key: 'sub', label: 'Le code ou le concept', type: 'textarea', ph: 'Collez du code, ou écrivez « les API », « le responsive », « async/await »…' }],
+    build: f => `Explique-moi ceci comme à quelqu'un d'intelligent mais qui ne code pas :
+
+---
+${f.sub || '[le code ou concept]'}
+---
+
+Format : 1) l'idée en UNE phrase avec une métaphore du quotidien ; 2) le détail, progressivement, en définissant chaque terme technique à sa première apparition ; 3) où ça se situe dans une app (frontend / backend / données) ; 4) la confusion classique des débutants sur ce sujet ; 5) trois questions rapides pour vérifier que j'ai compris — attends mes réponses avant de me corriger.`,
+  },
+  {
+    id: 'debrief', name: '/debrief', desc: 'Après une session de vibe coding : transformez ce qui vient de se passer en compétences durables.',
+    fields: [{ key: 'sess', label: 'Votre session en quelques lignes', type: 'textarea', ph: "ex. on a créé la page d'accueil, galéré sur le menu mobile, ajouté un mode sombre…" }],
+    build: f => `Voici ce qu'on vient de faire dans ma session de vibe coding : ${f.sess || '[résumé de la session]'}.
+
+Fais-moi un débrief de coach :
+1. Les 3 concepts techniques qui sont passés dans cette session, expliqués simplement — c'est mon programme de révision.
+2. LE moment où un peu plus de connaissance m'aurait fait gagner du temps : qu'est-ce que j'aurais dû savoir ?
+3. Mes prompts de la session : qu'est-ce qui était bien, qu'est-ce qui t'a manqué ?
+4. Trois questions à creuser avant la prochaine session pour progresser comme vibe coder.`,
+  },
+  {
+    id: 'risques', name: '/risques', desc: "Avant de partager votre app au monde : la revue sécurité / données / coûts en langage humain.",
+    fields: [{ key: 'app', label: "Votre app et qui va l'utiliser", type: 'textarea', ph: 'ex. un formulaire de réservation pour mon association, ~200 personnes, avec noms et emails' }],
+    build: f => `Mon application : ${f.app || "[décrivez l'app et ses utilisateurs]"}. Je m'apprête à la partager publiquement.
+
+Fais une revue de pré-lancement pour non-développeur, sévérité par point (🔴 bloquant / 🟠 à faire vite / 🟢 plus tard) :
+1. Sécurité : secrets exposés, entrées non vérifiées, qui peut faire quoi sans permission ?
+2. Données personnelles : qu'est-ce que je collecte, où ça vit, qu'est-ce que je dois dire à mes utilisateurs (RGPD) ?
+3. Coûts : qu'est-ce qui peut devenir payant ou exploser si 100× plus de monde arrive ?
+4. Solidité : que voit l'utilisateur quand quelque chose plante ?
+Pour chaque 🔴, dis-moi exactement quoi demander à Claude Code pour le régler.`,
+  },
+];
+
+/* ── état & progression ── */
+const KEY = 'vibelab-v1';
+let state = { done: [], used: [], checks: {} };
+try { state = Object.assign(state, JSON.parse(localStorage.getItem(KEY)) || {}); } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
+
+const XP_NODE = 15, XP_CMD = 5;
+const MAX_XP = NODES.length * XP_NODE + COMMANDS.length * XP_CMD;
+const LEVELS = [
+  [0, 'Novice de l’orbite'], [40, 'Apprenti·e vibe coder'], [90, 'Bâtisseur·se'],
+  [150, 'Architecte du vibe'], [MAX_XP, 'Constellation complète'],
+];
+function xp() { return state.done.length * XP_NODE + state.used.length * XP_CMD; }
+function renderHud() {
+  const v = xp();
+  let name = LEVELS[0][1];
+  LEVELS.forEach(([t, n]) => { if (v >= t) name = n; });
+  document.getElementById('lvlName').textContent = name;
+  document.getElementById('lvlXp').textContent = `${v} / ${MAX_XP} XP · ${state.done.length}/${NODES.length} étoiles`;
+  document.getElementById('xpFill').style.width = (v / MAX_XP * 100) + '%';
+}
+
+/* ── toast ── */
+let toastT;
+function toast(html) {
+  const el = document.getElementById('toast');
+  el.innerHTML = html;
+  el.classList.add('show');
+  clearTimeout(toastT);
+  toastT = setTimeout(() => el.classList.remove('show'), 2600);
+}
+
+/* ── copie (avec repli pour vieux Safari) ── */
+async function copyText(text, okMsg) {
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch (e) {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch (e2) {}
+    ta.remove();
+  }
+  toast(okMsg || 'Prompt copié — collez-le dans <b>Claude</b> !');
+}
+
+/* ── constellation SVG ── */
+const SVG = document.getElementById('skySvg');
+const NS = 'http://www.w3.org/2000/svg';
+const nodeById = id => id === 'hub' ? HUB : NODES.find(n => n.id === id);
+
+function renderSky() {
+  SVG.innerHTML = '';
+  // edges
+  EDGES.forEach(([a, b]) => {
+    const A = nodeById(a), B = nodeById(b);
+    const l = document.createElementNS(NS, 'line');
+    l.setAttribute('x1', A.x); l.setAttribute('y1', A.y);
+    l.setAttribute('x2', B.x); l.setAttribute('y2', B.y);
+    l.setAttribute('class', 'edge');
+    const target = b === 'hub' ? a : b;
+    const n = nodeById(target);
+    if (n && state.done.includes(n.id)) {
+      l.classList.add('lit');
+      l.style.color = BRANCHES[n.branch].raw;
+      l.setAttribute('stroke', BRANCHES[n.branch].raw);
+    }
+    SVG.appendChild(l);
+  });
+  // hub
+  const hub = document.createElementNS(NS, 'g');
+  hub.innerHTML = `
+    <circle cx="${HUB.x}" cy="${HUB.y}" r="46" fill="none" stroke="rgba(148,163,255,0.25)" stroke-width="1">
+      <animate attributeName="r" values="42;50;42" dur="6s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="${HUB.x}" cy="${HUB.y}" r="30" fill="rgba(148,163,255,0.06)" stroke="rgba(148,163,255,0.4)" stroke-width="1.4"/>
+    <text class="hub-label" x="${HUB.x}" y="${HUB.y + 4}">VOUS</text>`;
+  SVG.appendChild(hub);
+  // stars
+  NODES.forEach((n, i) => {
+    const done = state.done.includes(n.id);
+    const col = BRANCHES[n.branch].raw;
+    const g = document.createElementNS(NS, 'g');
+    g.setAttribute('class', 'star' + (done ? ' done' : ''));
+    g.setAttribute('role', 'button');
+    g.setAttribute('tabindex', '0');
+    g.setAttribute('aria-label', n.title);
+    const labelDy = n.y > HUB.y ? 36 : -26;
+    g.innerHTML = `
+      <circle class="halo" cx="${n.x}" cy="${n.y}" r="24" fill="${col}" opacity="0.18"/>
+      <circle class="core" cx="${n.x}" cy="${n.y}" r="${done ? 11 : 9}"
+        fill="${done ? col : 'rgba(20,26,51,0.9)'}"
+        stroke="${col}" stroke-width="${done ? 0 : 1.6}"
+        ${done ? `filter="drop-shadow(0 0 8px ${col})"` : ''}/>
+      ${done ? `<path d="M ${n.x-4} ${n.y} l 3 3.5 l 5.5 -7" stroke="#0B0E1A" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`
+             : `<text class="num" x="${n.x}" y="${n.y + 3}" text-anchor="middle">${String(i + 1).padStart(2, '0')}</text>`}
+      <text x="${n.x}" y="${n.y + labelDy}">${n.title}</text>`;
+    const open = () => openNode(n.id);
+    g.addEventListener('click', open);
+    g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+    SVG.appendChild(g);
+  });
+}
+
+/* ── panneau de nœud ── */
+const panel = document.getElementById('panel'), scrim = document.getElementById('scrim');
+function openNode(id) {
+  const n = nodeById(id);
+  const br = BRANCHES[n.branch];
+  const done = state.done.includes(id);
+  document.getElementById('pOrb').style.cssText =
+    `background: radial-gradient(circle at 35% 35%, ${br.raw}, transparent 75%), rgba(255,255,255,0.05); color: ${br.raw}; border: 1px solid ${br.raw}55;`;
+  const k = document.getElementById('pKicker');
+  k.textContent = br.label + (done ? ' · mission validée ✓' : '');
+  k.style.color = br.raw;
+  document.getElementById('pTitle').textContent = n.title;
+
+  const saved = state.checks[id] || [];
+  const promptHtml = n.prompt
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/\[([^\]]+)\]/g, '<span class="ph">[$1]</span>');
+
+  document.getElementById('pBody').innerHTML = `
+    <h3>La leçon</h3>
+    <div class="lesson">${n.lesson}</div>
+    <h3>Mission dans Claude</h3>
+    <div class="mission">
+      <ol class="mission-steps">${n.steps.map(s => `<li>${s}</li>`).join('')}</ol>
+      <div class="promptbox">${promptHtml}</div>
+      <button class="btn btn-violet" id="copyMission">⧉ Copier le prompt de mission</button>
+    </div>
+    <h3>Validation</h3>
+    <div class="checks">
+      ${n.checks.map((c, i) => `
+        <label class="check"><input type="checkbox" data-i="${i}" ${saved.includes(i) || done ? 'checked' : ''} ${done ? 'disabled' : ''}/><span>${c}</span></label>`).join('')}
+    </div>
+    ${done
+      ? `<div class="done-note">✓ Mission accomplie — étoile allumée (+${XP_NODE} XP)</div>`
+      : `<button class="btn btn-violet complete-btn" id="completeBtn" disabled>Mission accomplie → allumer l’étoile</button>`}
+  `;
+
+  document.getElementById('copyMission').addEventListener('click', () =>
+    copyText(n.prompt, 'Mission copiée — à coller dans <b>Claude</b>. Remplacez les <b>[crochets]</b> !'));
+
+  if (!done) {
+    const boxes = [...document.querySelectorAll('#pBody .check input')];
+    const btn = document.getElementById('completeBtn');
+    const sync = () => {
+      const on = boxes.filter(b => b.checked).map(b => +b.dataset.i);
+      state.checks[id] = on; save();
+      btn.disabled = on.length !== n.checks.length;
+    };
+    boxes.forEach(b => b.addEventListener('change', sync));
+    sync();
+    btn.addEventListener('click', () => {
+      state.done.push(id); save();
+      renderSky(); renderHud();
+      closePanel();
+      toast(`✨ <b>${n.title}</b> validée · +${XP_NODE} XP`);
+    });
+  }
+
+  panel.classList.add('open'); scrim.classList.add('open');
+}
+function closePanel() { panel.classList.remove('open'); scrim.classList.remove('open'); }
+document.getElementById('pClose').addEventListener('click', closePanel);
+scrim.addEventListener('click', closePanel);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePanel(); });
+
+/* ── forge ── */
+function renderForge() {
+  const grid = document.getElementById('forgeGrid');
+  grid.innerHTML = '';
+  COMMANDS.forEach(c => {
+    const used = state.used.includes(c.id);
+    const card = document.createElement('div');
+    card.className = 'cmd';
+    card.innerHTML = `
+      <div class="cmd-head">
+        <span class="cmd-name">${c.name}</span>
+        <span class="cmd-badge ${used ? 'used' : ''}">${used ? '✓ utilisée' : '+' + XP_CMD + ' xp'}</span>
+      </div>
+      <p>${c.desc}</p>
+      ${c.fields.map(f => `
+        <div>
+          <label for="${c.id}-${f.key}">${f.label}</label>
+          ${f.type === 'textarea'
+            ? `<textarea id="${c.id}-${f.key}" placeholder="${f.ph}"></textarea>`
+            : `<input id="${c.id}-${f.key}" type="text" placeholder="${f.ph}" />`}
+        </div>`).join('')}
+      <button class="btn btn-amber">⚒ Forger &amp; copier le prompt</button>`;
+    card.querySelector('button').addEventListener('click', () => {
+      const vals = {};
+      c.fields.forEach(f => { vals[f.key] = document.getElementById(`${c.id}-${f.key}`).value.trim(); });
+      copyText(c.build(vals), `<b>${c.name}</b> forgé et copié — collez-le dans Claude ou Claude Code !`);
+      if (!state.used.includes(c.id)) {
+        state.used.push(c.id); save(); renderHud(); renderForge();
+      }
+    });
+    grid.appendChild(card);
+  });
+}
+
+/* ── tabs ── */
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x === t));
+  document.getElementById('view-sky').hidden = t.dataset.tab !== 'sky';
+  document.getElementById('view-forge').hidden = t.dataset.tab !== 'forge';
+}));
+
+/* ── reset ── */
+document.getElementById('resetBtn').addEventListener('click', () => {
+  if (confirm('Effacer toute votre progression VibeLab sur ce navigateur ?')) {
+    state = { done: [], used: [], checks: {} }; save();
+    renderSky(); renderHud(); renderForge();
+    toast('Progression réinitialisée — nouvelle constellation ✨');
+  }
+});
+
+renderSky(); renderHud(); renderForge();
+</script>
+</body>
+</html>
