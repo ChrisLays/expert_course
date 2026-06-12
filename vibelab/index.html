@@ -1,0 +1,851 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>VibeLab — Compagnon de vibe coding</title>
+<meta name="description" content="Devenir expert du vibe coding avec Claude : constellation de compétences N1→N5, forge de prompts, codex de référence exhaustif (commandes, CLI, hooks, skills, artifacts). 100 % local, sans IA embarquée." />
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root {
+    --bg: #0B0E1A; --bg2: #111527; --card: #151A30; --card2: #1B2140;
+    --line: rgba(148,163,255,0.14); --line-strong: rgba(148,163,255,0.32);
+    --txt: #E6E9F8; --txt2: #9AA3C7; --txt3: #6B7399;
+    --cyan: #5EE6D0; --amber: #F2B450; --violet: #A78BFA; --rose: #F472B6;
+    --ok: #4ADE80;
+    --mono: 'JetBrains Mono', monospace;
+    --r: 16px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--txt);
+    font-family: 'Space Grotesk', sans-serif;
+    min-height: 100vh; overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: rgba(167,139,250,0.3); }
+  button { font-family: inherit; }
+
+  #bg { position: fixed; inset: 0; z-index: 0; }
+  .veil { position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    background: radial-gradient(ellipse 90% 70% at 50% 0%, rgba(167,139,250,0.07), transparent 60%),
+                radial-gradient(ellipse 70% 60% at 85% 100%, rgba(94,230,208,0.05), transparent 60%); }
+
+  .shell { position: relative; z-index: 2; max-width: 1320px; margin: 0 auto; padding: 0 clamp(14px, 3vw, 36px) 80px; }
+
+  /* ── header ── */
+  header { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 22px 0 16px; flex-wrap: wrap; }
+  .brand { display: flex; align-items: center; gap: 13px; }
+  .brand-orb {
+    width: 42px; height: 42px; border-radius: 50%; position: relative; flex-shrink: 0;
+    background: conic-gradient(from 200deg, var(--cyan), var(--violet), var(--amber), var(--cyan));
+    animation: spin 14s linear infinite;
+  }
+  .brand-orb::after { content: ''; position: absolute; inset: 4px; border-radius: 50%; background: var(--bg); }
+  .brand-orb::before { content: ''; position: absolute; inset: -8px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(167,139,250,0.35), transparent 70%); }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .brand h1 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
+  .brand h1 span { background: linear-gradient(90deg, var(--cyan), var(--violet)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .brand small { display: block; font-family: var(--mono); font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--txt3); margin-top: 2px; }
+
+  .hud { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .level { text-align: right; }
+  .level .lname { font-size: 13.5px; font-weight: 600; color: var(--txt); }
+  .level .lxp { font-family: var(--mono); font-size: 10.5px; color: var(--txt3); margin-top: 1px; }
+  .xpbar { width: 150px; height: 7px; border-radius: 99px; background: rgba(255,255,255,0.07); overflow: hidden; }
+  .xpbar i { display: block; height: 100%; border-radius: 99px; width: 0%;
+    background: linear-gradient(90deg, var(--cyan), var(--violet)); transition: width 600ms cubic-bezier(.2,.8,.2,1); }
+
+  /* ── tabs ── */
+  .tabs { display: inline-flex; gap: 6px; padding: 5px; border-radius: 99px;
+    background: rgba(255,255,255,0.04); border: 1px solid var(--line); margin: 6px 0 22px; flex-wrap: wrap; }
+  .tab { border: none; cursor: pointer; border-radius: 99px; padding: 9px 18px;
+    font-size: 13.5px; font-weight: 600; color: var(--txt2); background: transparent; transition: all 200ms; }
+  .tab[data-tab="sky"].active { color: #0B0E1A; background: linear-gradient(90deg, var(--cyan), #8BE9FD); }
+  .tab[data-tab="forge"].active { color: #1A1206; background: linear-gradient(90deg, var(--amber), #F8D08A); }
+  .tab[data-tab="codex"].active { color: #161029; background: linear-gradient(90deg, var(--violet), #C4B5FD); }
+  .tab[data-tab="dojo"].active { color: #2A0E1C; background: linear-gradient(90deg, var(--rose), #F9A8D4); }
+
+  .intro { max-width: 700px; margin: 0 0 18px; color: var(--txt2); font-size: 14.5px; line-height: 1.65; }
+  .intro b { color: var(--txt); }
+
+  /* ── constellation ── */
+  .sky { position: relative; border-radius: 24px; border: 1px solid var(--line);
+    background: radial-gradient(ellipse 80% 90% at 50% 40%, rgba(27,33,64,0.55), rgba(13,16,32,0.7)); overflow: hidden; }
+  .sky svg { display: block; width: 100%; height: auto; }
+  .orbit { fill: none; stroke: rgba(148,163,255,0.07); stroke-width: 1; }
+  .edge { stroke: var(--line-strong); stroke-width: 1.3; stroke-dasharray: 3 6; }
+  .edge.lit { stroke-dasharray: none; stroke-width: 2; filter: drop-shadow(0 0 6px currentColor); opacity: 0.9; }
+  .star { cursor: pointer; }
+  .star .halo { opacity: 0; transition: opacity 300ms; }
+  .star:hover .halo, .star.done .halo { opacity: 1; }
+  .star text { font-family: 'Space Grotesk', sans-serif; fill: var(--txt2); font-size: 13px; font-weight: 500; text-anchor: middle; pointer-events: none; }
+  .star.done text { fill: var(--txt); font-weight: 600; }
+  .star .num { font-family: var(--mono); font-size: 9px; fill: var(--txt3); }
+  .star .lvl { font-family: var(--mono); font-size: 8.5px; fill: var(--txt3); }
+  .hub-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.25em; fill: var(--txt2); text-anchor: middle; }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; padding: 14px 20px; border-top: 1px solid var(--line); font-size: 12.5px; color: var(--txt2); }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .legend i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+
+  /* ── forge ── */
+  .forge-h2 { display: flex; align-items: baseline; gap: 12px; margin: 30px 0 6px; }
+  .forge-h2:first-of-type { margin-top: 4px; }
+  .forge-h2 h2 { margin: 0; font-size: 17px; font-weight: 700; }
+  .forge-h2 small { font-size: 12.5px; color: var(--txt3); }
+  .forge-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 16px; margin-bottom: 8px; }
+  .cmd select { width: 100%; border-radius: 10px; border: 1px solid var(--line); background: rgba(0,0,0,0.25);
+    color: var(--txt); font-family: 'Space Grotesk', sans-serif; font-size: 13px; padding: 10px 12px; outline: none; }
+  .cmd select:focus { border-color: rgba(242,180,80,0.5); }
+  .cmd-out { display: none; flex-direction: column; gap: 10px; border-top: 1px dashed var(--line); padding-top: 12px; }
+  .cmd-out.show { display: flex; }
+  .vlist { display: grid; gap: 5px; }
+  .vlist div { font-size: 12px; line-height: 1.5; display: flex; gap: 8px; align-items: flex-start; }
+  .vlist .v-ok { color: var(--ok); }
+  .vlist .v-bad { color: #FB7185; }
+  .learnlist { margin: 0; padding-left: 18px; display: grid; gap: 5px; }
+  .learnlist li { font-size: 12.3px; line-height: 1.55; color: var(--txt2); }
+  .learnlist li::marker { color: var(--violet); }
+  .learn-k { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--violet); }
+
+  /* ── dojo ── */
+  .dojo-setup { display: flex; flex-direction: column; gap: 16px; max-width: 720px; }
+  .dojo-domains { display: flex; gap: 7px; flex-wrap: wrap; }
+  .dojo-card { max-width: 720px; border: 1px solid var(--line); border-radius: 20px;
+    background: linear-gradient(170deg, var(--card), var(--bg2)); padding: 26px; }
+  .dojo-meta { display: flex; justify-content: space-between; align-items: center; gap: 10px;
+    font-family: var(--mono); font-size: 11px; color: var(--txt3); margin-bottom: 16px; }
+  .dojo-meta .streak { color: var(--rose); }
+  .dojo-q { font-size: 16px; line-height: 1.6; color: var(--txt); margin-bottom: 8px; }
+  .dojo-q .qk { display: block; font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--rose); margin-bottom: 8px; }
+  .dojo-q code, .dojo-ans code { font-family: var(--mono); font-size: 0.9em; color: #BFE8FF; }
+  .dojo-answers { display: grid; gap: 9px; margin-top: 16px; }
+  .dojo-ans { text-align: left; border: 1px solid var(--line); background: rgba(255,255,255,0.03);
+    color: var(--txt2); border-radius: 12px; padding: 13px 15px; font-size: 13.5px; line-height: 1.5;
+    cursor: pointer; font-family: 'Space Grotesk', sans-serif; transition: all 150ms; }
+  .dojo-ans:hover:not(:disabled) { border-color: var(--line-strong); background: rgba(255,255,255,0.05); }
+  .dojo-ans:disabled { cursor: default; opacity: 0.55; }
+  .dojo-ans.good { border-color: rgba(74,222,128,0.6); background: rgba(74,222,128,0.1); color: var(--ok); opacity: 1; }
+  .dojo-ans.bad { border-color: rgba(251,113,133,0.6); background: rgba(251,113,133,0.08); color: #FB7185; opacity: 1; }
+  .dojo-note { margin-top: 14px; padding: 12px 14px; border-radius: 11px; background: rgba(255,255,255,0.04);
+    border: 1px solid var(--line); font-size: 12.5px; line-height: 1.6; color: var(--txt2); }
+  .dojo-end { text-align: center; padding: 10px 0; }
+  .dojo-end .big { font-size: 42px; font-weight: 700; background: linear-gradient(90deg, var(--rose), var(--violet));
+    -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .btn-rose { background: linear-gradient(90deg, var(--rose), #F9A8D4); color: #2A0E1C; }
+  .cmd { border: 1px solid var(--line); border-radius: var(--r); background: linear-gradient(170deg, var(--card), var(--bg2));
+    padding: 20px 20px 18px; display: flex; flex-direction: column; gap: 12px; transition: border-color 250ms, transform 250ms; }
+  .cmd:hover { border-color: rgba(242,180,80,0.4); transform: translateY(-2px); }
+  .cmd-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .cmd-name { font-family: var(--mono); font-size: 15px; font-weight: 600; color: var(--amber); }
+  .cmd-badge { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--txt3); border: 1px solid var(--line); border-radius: 99px; padding: 3px 9px; }
+  .cmd-badge.used { color: var(--ok); border-color: rgba(74,222,128,0.4); }
+  .cmd p { margin: 0; font-size: 13.5px; line-height: 1.55; color: var(--txt2); }
+  .cmd label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--txt3); }
+  .cmd textarea, .cmd input { width: 100%; border-radius: 10px; border: 1px solid var(--line); background: rgba(0,0,0,0.25);
+    color: var(--txt); font-family: 'Space Grotesk', sans-serif; font-size: 13.5px; padding: 10px 12px;
+    resize: vertical; min-height: 38px; outline: none; }
+  .cmd textarea { min-height: 70px; }
+  .cmd textarea:focus, .cmd input:focus { border-color: rgba(242,180,80,0.5); }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    border: none; cursor: pointer; border-radius: 11px; padding: 11px 18px;
+    font-size: 13.5px; font-weight: 600; transition: transform 150ms, filter 200ms; }
+  .btn:active { transform: scale(0.97); }
+  .btn-amber { background: linear-gradient(90deg, var(--amber), #F8D08A); color: #1A1206; }
+  .btn-violet { background: linear-gradient(90deg, var(--violet), #C4B5FD); color: #161029; }
+  .btn:hover { filter: brightness(1.08); }
+
+  /* ── codex ── */
+  .codex-bar { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+  .codex-search { flex: 1; min-width: 240px; position: relative; }
+  .codex-search input { width: 100%; border-radius: 12px; border: 1px solid var(--line); background: rgba(0,0,0,0.3);
+    color: var(--txt); font-family: 'Space Grotesk', sans-serif; font-size: 14.5px; padding: 13px 16px 13px 42px; outline: none; }
+  .codex-search input:focus { border-color: rgba(167,139,250,0.5); }
+  .codex-search::before { content: '⌕'; position: absolute; left: 15px; top: 50%; transform: translateY(-50%);
+    color: var(--txt3); font-size: 18px; }
+  .codex-count { font-family: var(--mono); font-size: 11px; color: var(--txt3); }
+  .codex-chips { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 20px; }
+  .cchip { border: 1px solid var(--line); background: rgba(255,255,255,0.03); color: var(--txt2);
+    border-radius: 99px; padding: 7px 14px; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: all 180ms; }
+  .cchip:hover { border-color: var(--line-strong); }
+  .cchip.active { background: rgba(167,139,250,0.18); border-color: rgba(167,139,250,0.5); color: #D9CFFE; }
+  .cchip .n { font-family: var(--mono); font-size: 10px; opacity: 0.7; margin-left: 5px; }
+
+  .codex-section { margin-bottom: 26px; border: 1px solid var(--line); border-radius: 18px; overflow: hidden;
+    background: linear-gradient(175deg, rgba(21,26,48,0.8), rgba(14,17,33,0.8)); }
+  .cs-head { display: flex; align-items: center; gap: 13px; padding: 17px 20px; cursor: pointer; user-select: none; }
+  .cs-head:hover { background: rgba(255,255,255,0.02); }
+  .cs-ico { width: 38px; height: 38px; border-radius: 11px; display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 16px; font-weight: 600; flex-shrink: 0;
+    background: rgba(255,255,255,0.05); border: 1px solid var(--line); }
+  .cs-head h2 { margin: 0; font-size: 16.5px; font-weight: 700; flex: 1; }
+  .cs-head h2 small { display: block; font-size: 12px; font-weight: 400; color: var(--txt3); margin-top: 2px; }
+  .cs-count { font-family: var(--mono); font-size: 10.5px; color: var(--txt3); }
+  .cs-arrow { color: var(--txt3); transition: transform 250ms; font-size: 13px; }
+  .codex-section.open .cs-arrow { transform: rotate(90deg); }
+  .cs-body { display: none; border-top: 1px solid var(--line); }
+  .codex-section.open .cs-body { display: block; }
+  .cs-intro { padding: 14px 20px 4px; font-size: 13.5px; line-height: 1.6; color: var(--txt2); }
+  .cs-intro b { color: var(--txt); }
+  .cs-intro code, .entry-desc code, .entry-note code {
+    font-family: var(--mono); font-size: 0.88em; background: rgba(0,0,0,0.35);
+    border: 1px solid var(--line); border-radius: 5px; padding: 1px 5px; color: #BFE8FF; }
+  .entries { padding: 10px 12px 16px; display: grid; gap: 7px; }
+  .entry { display: grid; grid-template-columns: minmax(150px, 230px) 1fr; gap: 6px 16px; align-items: baseline;
+    padding: 10px 12px; border-radius: 11px; border: 1px solid transparent; transition: all 150ms; }
+  .entry:hover { background: rgba(255,255,255,0.03); border-color: var(--line); }
+  .entry-name { font-family: var(--mono); font-size: 12.5px; font-weight: 600; word-break: break-word; }
+  .entry-name .tag { display: inline-block; font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase;
+    border-radius: 99px; padding: 2px 7px; margin-left: 7px; vertical-align: 2px;
+    background: rgba(255,255,255,0.06); border: 1px solid var(--line); color: var(--txt3); font-weight: 400; }
+  .entry-desc { font-size: 13px; line-height: 1.55; color: var(--txt2); }
+  .entry-desc b { color: var(--txt); }
+  .entry-note { grid-column: 1 / -1; font-size: 12px; line-height: 1.55; color: var(--txt3);
+    border-left: 2px solid var(--line-strong); padding-left: 10px; margin-top: 2px; }
+  .entry.hidden { display: none; }
+  @media (max-width: 640px) { .entry { grid-template-columns: 1fr; } }
+
+  /* ── panel ── */
+  .scrim { position: fixed; inset: 0; z-index: 40; background: rgba(5,7,15,0.6); backdrop-filter: blur(3px);
+    opacity: 0; pointer-events: none; transition: opacity 300ms; }
+  .scrim.open { opacity: 1; pointer-events: auto; }
+  .panel { position: fixed; top: 0; right: 0; bottom: 0; z-index: 50; width: min(560px, 100vw);
+    background: linear-gradient(180deg, #141A33, #0E1224);
+    border-left: 1px solid var(--line); box-shadow: -30px 0 80px rgba(0,0,0,0.5);
+    transform: translateX(105%); transition: transform 380ms cubic-bezier(.2,.8,.2,1);
+    display: flex; flex-direction: column; }
+  .panel.open { transform: none; }
+  .panel-head { padding: 22px 26px 16px; border-bottom: 1px solid var(--line); display: flex; gap: 14px; align-items: flex-start; }
+  .panel-orb { width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0; position: relative; }
+  .panel-orb::after { content: ''; position: absolute; inset: -9px; border-radius: 50%; opacity: 0.5;
+    background: radial-gradient(circle, currentColor, transparent 70%); }
+  .panel-kicker { font-family: var(--mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 5px; }
+  .panel-head h2 { margin: 0; font-size: 21px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.2; }
+  .panel-close { margin-left: auto; flex-shrink: 0; width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--line);
+    background: rgba(255,255,255,0.04); color: var(--txt2); cursor: pointer; font-size: 17px; }
+  .panel-body { flex: 1; overflow-y: auto; padding: 22px 26px 30px; }
+  .panel-body h3 { font-size: 12px; font-family: var(--mono); letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--txt3); margin: 26px 0 10px; display: flex; align-items: center; gap: 9px; }
+  .panel-body h3::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+  .panel-body h3:first-child { margin-top: 0; }
+  .lesson { font-size: 14.5px; line-height: 1.7; color: var(--txt2); }
+  .lesson p { margin: 0 0 12px; }
+  .lesson b { color: var(--txt); font-weight: 600; }
+  .lesson code { font-family: var(--mono); font-size: 0.86em; background: rgba(0,0,0,0.35);
+    border: 1px solid var(--line); border-radius: 5px; padding: 1px 5px; color: #BFE8FF; }
+  .lesson .visual { display: flex; gap: 8px; align-items: stretch; margin: 14px 0; flex-wrap: wrap; }
+  .lesson .vbox { flex: 1; min-width: 110px; border: 1px solid var(--line); border-radius: 11px; padding: 10px 12px;
+    background: rgba(255,255,255,0.03); text-align: center; }
+  .lesson .vbox b { display: block; font-size: 13px; margin-bottom: 3px; }
+  .lesson .vbox span { font-size: 11.5px; color: var(--txt3); line-height: 1.4; display: block; }
+  .lesson .varrow { align-self: center; color: var(--txt3); font-size: 15px; }
+
+  .mission { border: 1px solid rgba(167,139,250,0.3); border-radius: 14px; padding: 16px;
+    background: linear-gradient(165deg, rgba(167,139,250,0.08), rgba(167,139,250,0.02)); }
+  .mission-steps { margin: 0 0 14px; padding-left: 20px; font-size: 13.8px; line-height: 1.65; color: var(--txt2); }
+  .mission-steps li { margin: 4px 0; }
+  .mission-steps li::marker { color: var(--violet); font-weight: 600; }
+  .promptbox { position: relative; border-radius: 11px; background: rgba(0,0,0,0.35); border: 1px solid var(--line);
+    padding: 13px 14px; font-family: var(--mono); font-size: 12px; line-height: 1.65; color: #C9D2F0;
+    white-space: pre-wrap; max-height: 240px; overflow-y: auto; }
+  .promptbox .ph { color: var(--amber); }
+  .mission .btn { margin-top: 12px; width: 100%; }
+
+  .checks { display: grid; gap: 9px; }
+  .check { display: flex; gap: 11px; align-items: flex-start; padding: 11px 13px; border-radius: 11px;
+    border: 1px solid var(--line); background: rgba(255,255,255,0.03); cursor: pointer; transition: border-color 200ms; }
+  .check:hover { border-color: var(--line-strong); }
+  .check input { margin-top: 2px; accent-color: var(--ok); width: 16px; height: 16px; flex-shrink: 0; }
+  .check span { font-size: 13.5px; line-height: 1.5; color: var(--txt2); }
+  .complete-btn { width: 100%; margin-top: 16px; padding: 14px; font-size: 14.5px; }
+  .complete-btn:disabled { opacity: 0.35; cursor: not-allowed; filter: none; }
+  .done-note { display: flex; align-items: center; gap: 10px; margin-top: 16px; padding: 13px 15px; border-radius: 11px;
+    background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.35); color: var(--ok); font-size: 13.5px; font-weight: 600; }
+
+  .toast { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%) translateY(80px); z-index: 90;
+    background: #1E2542; border: 1px solid var(--line-strong); color: var(--txt); border-radius: 12px;
+    padding: 12px 20px; font-size: 13.5px; font-weight: 500; box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+    transition: transform 350ms cubic-bezier(.2,.8,.2,1); max-width: 90vw; text-align: center; }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast b { color: var(--cyan); }
+
+  footer { margin-top: 36px; font-size: 12.5px; line-height: 1.7; color: var(--txt3); max-width: 760px; }
+  footer b { color: var(--txt2); }
+  .reset { background: none; border: none; color: var(--txt3); font-size: 11.5px; cursor: pointer; text-decoration: underline; padding: 0; margin-top: 8px; }
+
+  @media (max-width: 700px) {
+    .hud .xpbar { width: 110px; }
+    .panel { width: 100vw; }
+    .legend { gap: 12px; padding: 12px 14px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<div class="veil"></div>
+
+<div class="shell">
+  <header>
+    <div class="brand">
+      <div class="brand-orb"></div>
+      <div>
+        <h1>Vibe<span>Lab</span></h1>
+        <small>Compagnon de vibe coding · v2</small>
+      </div>
+    </div>
+    <div class="hud">
+      <div class="level">
+        <div class="lname" id="lvlName">—</div>
+        <div class="lxp" id="lvlXp">0 XP</div>
+      </div>
+      <div class="xpbar"><i id="xpFill"></i></div>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab active" data-tab="sky" role="tab">✦ Constellation</button>
+    <button class="tab" data-tab="forge" role="tab">⚒ La Forge</button>
+    <button class="tab" data-tab="codex" role="tab">⌘ Le Codex</button>
+    <button class="tab" data-tab="dojo" role="tab">◉ Le Dojo</button>
+  </nav>
+
+  <!-- ════ CONSTELLATION ════ -->
+  <section id="view-sky">
+    <p class="intro">26 étoiles-compétences. Le cursus web monte en <b>5 orbites</b> — des fondations (N1) au niveau d'un <b>développeur junior aux compétences solides</b> (N5). Chaque étoile : une leçon dense, une <b>mission à exécuter dans Claude</b>, une validation. Les branches Prompt et Outils Claude complètent l'entraînement.</p>
+    <div class="sky">
+      <svg id="skySvg" viewBox="0 0 1320 960" aria-label="Constellation des compétences"></svg>
+      <div class="legend" id="skyLegend"></div>
+    </div>
+  </section>
+
+  <!-- ════ FORGE ════ -->
+  <section id="view-forge" hidden>
+    <p class="intro">La Forge applique les règles du <b>Codex</b> pour fabriquer du concret : des <b>fichiers prêts à installer</b> (skills, hooks, sous-agents, CLAUDE.md, MCP) avec validation des contraintes officielles et explication de chaque choix — et des <b>prompts experts</b> à coller dans Claude. On apprend en fabriquant.</p>
+    <div id="forgeRoot"></div>
+  </section>
+
+  <!-- ════ DOJO ════ -->
+  <section id="view-dojo" hidden>
+    <p class="intro">Le Dojo entraîne votre <b>mémoire de l'outillage</b> : des séries de 10 questions tirées des 240 entrées du Codex. Reconnaître <code style="font-family:var(--mono);font-size:12px">/rewind</code> ou un événement de hook sans réfléchir, c'est ça, la fluidité d'un expert. Chaque bonne réponse = +1 XP (plafond <span id="dojoCap"></span> XP).</p>
+    <div id="dojoRoot"></div>
+  </section>
+
+  <!-- ════ CODEX ════ -->
+  <section id="view-codex" hidden>
+    <p class="intro">La base de référence du vibe coder : <b>l'outillage Claude réel et complet</b> — commandes slash intégrées, CLI, raccourcis Mac, hooks, sous-agents, skills, mémoire, MCP, Artifacts, Projects. Cherchez, dépliez, apprenez. Compilé depuis la documentation officielle.</p>
+    <div class="codex-bar">
+      <div class="codex-search"><input id="codexSearch" type="search" placeholder="Chercher une commande, un concept, un flag… (ex. hooks, --resume, rewind)" /></div>
+      <span class="codex-count" id="codexCount"></span>
+    </div>
+    <div class="codex-chips" id="codexChips"></div>
+    <div id="codexSections"></div>
+  </section>
+
+  <footer>
+    <b>Comment ça marche :</b> VibeLab n'embarque aucune IA et n'envoie rien nulle part — votre progression vit dans ce navigateur (localStorage). Les missions et les commandes produisent des prompts que vous exécutez vous-même dans Claude (claude.ai) ou Claude Code. Le Codex est compilé depuis la documentation officielle Anthropic ; l'outillage évolue vite — en cas de doute, <code style="font-family:var(--mono);font-size:11px">/help</code> dans Claude Code et les release notes font foi.
+    <br /><button class="reset" id="resetBtn">Réinitialiser ma progression</button>
+  </footer>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="panel" id="panel" role="dialog" aria-modal="true">
+  <div class="panel-head">
+    <div class="panel-orb" id="pOrb"></div>
+    <div>
+      <div class="panel-kicker" id="pKicker"></div>
+      <h2 id="pTitle"></h2>
+    </div>
+    <button class="panel-close" id="pClose" aria-label="Fermer">✕</button>
+  </div>
+  <div class="panel-body" id="pBody"></div>
+</aside>
+
+<div class="toast" id="toast"></div>
+
+<script src="data.js"></script>
+<script>
+'use strict';
+/* VibeLab v2 — app shell. Toutes les données vivent dans data.js (window.VL). */
+
+const { BRANCHES, NODES, EDGES, HUB, COMMANDS, CODEX, LEVEL_NAMES } = window.VL;
+
+/* ── fond animé : orbes & cercles abstraits ── */
+(function () {
+  const cv = document.getElementById('bg');
+  const ctx = cv.getContext('2d');
+  let W, H;
+  const ORBS = [];
+  const COLS = ['94,230,208', '167,139,250', '242,180,80', '244,114,182'];
+  function resize() {
+    W = cv.width = innerWidth * devicePixelRatio;
+    H = cv.height = innerHeight * devicePixelRatio;
+    cv.style.width = innerWidth + 'px'; cv.style.height = innerHeight + 'px';
+  }
+  resize(); addEventListener('resize', resize);
+  for (let i = 0; i < 22; i++) {
+    ORBS.push({ x: Math.random(), y: Math.random(), r: (20 + Math.random() * 130) * devicePixelRatio,
+      c: COLS[i % COLS.length], sp: 0.00004 + Math.random() * 0.00012, ph: Math.random() * Math.PI * 2,
+      ring: Math.random() > 0.55 });
+  }
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let last = 0;
+  function frame(t) {
+    if (!reduced || !last) {
+      ctx.clearRect(0, 0, W, H);
+      ORBS.forEach(o => {
+        const x = (o.x + Math.sin(t * o.sp + o.ph) * 0.06) * W;
+        const y = (o.y + Math.cos(t * o.sp * 0.8 + o.ph) * 0.06) * H;
+        if (o.ring) {
+          ctx.strokeStyle = `rgba(${o.c},0.10)`; ctx.lineWidth = 1.2 * devicePixelRatio;
+          ctx.beginPath(); ctx.arc(x, y, o.r, 0, Math.PI * 2); ctx.stroke();
+        } else {
+          const g = ctx.createRadialGradient(x, y, 0, x, y, o.r);
+          g.addColorStop(0, `rgba(${o.c},0.07)`); g.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, o.r, 0, Math.PI * 2); ctx.fill();
+        }
+      });
+      last = t;
+    }
+    if (!reduced) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+
+/* ── état & progression ── */
+const KEY = 'vibelab-v1';
+let state = { done: [], used: [], checks: {}, dojoXp: 0 };
+try { state = Object.assign(state, JSON.parse(localStorage.getItem(KEY)) || {}); } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
+
+const XP_NODE = 15, XP_CMD = 5;
+const DOJO_CAP = window.VL.DOJO_CAP || 120;
+const MAX_XP = NODES.length * XP_NODE + COMMANDS.length * XP_CMD + DOJO_CAP;
+const LEVELS = LEVEL_NAMES.map(([frac, name]) => [Math.round(frac * MAX_XP), name]);
+function xp() { return state.done.filter(id => NODES.some(n => n.id === id)).length * XP_NODE
+  + state.used.filter(id => COMMANDS.some(c => c.id === id)).length * XP_CMD
+  + Math.min(state.dojoXp || 0, DOJO_CAP); }
+function renderHud() {
+  const v = xp();
+  let name = LEVELS[0][1];
+  LEVELS.forEach(([t, n]) => { if (v >= t) name = n; });
+  document.getElementById('lvlName').textContent = name;
+  document.getElementById('lvlXp').textContent =
+    `${v} / ${MAX_XP} XP · ${state.done.filter(id => NODES.some(n => n.id === id)).length}/${NODES.length} étoiles`;
+  document.getElementById('xpFill').style.width = Math.min(100, v / MAX_XP * 100) + '%';
+}
+
+/* ── toast & copie ── */
+let toastT;
+function toast(html) {
+  const el = document.getElementById('toast');
+  el.innerHTML = html; el.classList.add('show');
+  clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('show'), 2600);
+}
+async function copyText(text, okMsg) {
+  try { await navigator.clipboard.writeText(text); }
+  catch (e) {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch (e2) {}
+    ta.remove();
+  }
+  toast(okMsg || 'Prompt copié — collez-le dans <b>Claude</b> !');
+}
+const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+
+/* ── constellation ── */
+const SVG = document.getElementById('skySvg');
+const NS = 'http://www.w3.org/2000/svg';
+const nodeById = id => id === 'hub' ? HUB : NODES.find(n => n.id === id);
+
+function renderSky() {
+  SVG.innerHTML = '';
+  // orbites de niveau (décor)
+  (window.VL.ORBITS || []).forEach(r => {
+    const c = document.createElementNS(NS, 'circle');
+    c.setAttribute('cx', HUB.x); c.setAttribute('cy', HUB.y); c.setAttribute('r', r);
+    c.setAttribute('class', 'orbit');
+    SVG.appendChild(c);
+  });
+  EDGES.forEach(([a, b]) => {
+    const A = nodeById(a), B = nodeById(b);
+    if (!A || !B) return;
+    const l = document.createElementNS(NS, 'line');
+    l.setAttribute('x1', A.x); l.setAttribute('y1', A.y);
+    l.setAttribute('x2', B.x); l.setAttribute('y2', B.y);
+    l.setAttribute('class', 'edge');
+    const target = b === 'hub' ? a : b;
+    const n = nodeById(target);
+    if (n && state.done.includes(n.id)) {
+      l.classList.add('lit');
+      l.style.color = BRANCHES[n.branch].raw;
+      l.setAttribute('stroke', BRANCHES[n.branch].raw);
+    }
+    SVG.appendChild(l);
+  });
+  const hub = document.createElementNS(NS, 'g');
+  hub.innerHTML = `
+    <circle cx="${HUB.x}" cy="${HUB.y}" r="46" fill="none" stroke="rgba(148,163,255,0.25)" stroke-width="1">
+      <animate attributeName="r" values="42;50;42" dur="6s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="${HUB.x}" cy="${HUB.y}" r="30" fill="rgba(148,163,255,0.06)" stroke="rgba(148,163,255,0.4)" stroke-width="1.4"/>
+    <text class="hub-label" x="${HUB.x}" y="${HUB.y + 4}">VOUS</text>`;
+  SVG.appendChild(hub);
+  NODES.forEach((n, i) => {
+    const done = state.done.includes(n.id);
+    const col = BRANCHES[n.branch].raw;
+    const g = document.createElementNS(NS, 'g');
+    g.setAttribute('class', 'star' + (done ? ' done' : ''));
+    g.setAttribute('role', 'button'); g.setAttribute('tabindex', '0');
+    g.setAttribute('aria-label', n.title);
+    const labelDy = n.labelDy != null ? n.labelDy : (n.y > HUB.y ? 36 : -26);
+    g.innerHTML = `
+      <circle class="halo" cx="${n.x}" cy="${n.y}" r="24" fill="${col}" opacity="0.18"/>
+      <circle class="core" cx="${n.x}" cy="${n.y}" r="${done ? 11 : 9}"
+        fill="${done ? col : 'rgba(20,26,51,0.9)'}"
+        stroke="${col}" stroke-width="${done ? 0 : 1.6}"
+        ${done ? `filter="drop-shadow(0 0 8px ${col})"` : ''}/>
+      ${done ? `<path d="M ${n.x - 4} ${n.y} l 3 3.5 l 5.5 -7" stroke="#0B0E1A" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`
+             : `<text class="num" x="${n.x}" y="${n.y + 3}" text-anchor="middle">${String(i + 1).padStart(2, '0')}</text>`}
+      ${n.level ? `<text class="lvl" x="${n.x + 16}" y="${n.y - 12}">N${n.level}</text>` : ''}
+      <text x="${n.x}" y="${n.y + labelDy}">${n.title}</text>`;
+    const open = () => openNode(n.id);
+    g.addEventListener('click', open);
+    g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+    SVG.appendChild(g);
+  });
+  // légende
+  document.getElementById('skyLegend').innerHTML =
+    Object.values(BRANCHES).map(b => `<span><i style="background:${b.raw}"></i> ${b.label}</span>`).join('') +
+    `<span><i style="background:var(--txt3)"></i> N1→N5 : niveau du cursus web · ● mission validée</span>`;
+}
+
+/* ── panneau de nœud ── */
+const panel = document.getElementById('panel'), scrim = document.getElementById('scrim');
+function openNode(id) {
+  const n = nodeById(id);
+  const br = BRANCHES[n.branch];
+  const done = state.done.includes(id);
+  document.getElementById('pOrb').style.cssText =
+    `background: radial-gradient(circle at 35% 35%, ${br.raw}, transparent 75%), rgba(255,255,255,0.05); color: ${br.raw}; border: 1px solid ${br.raw}55;`;
+  const k = document.getElementById('pKicker');
+  k.textContent = br.label + (n.level ? ` · niveau ${n.level}` : '') + (done ? ' · mission validée ✓' : '');
+  k.style.color = br.raw;
+  document.getElementById('pTitle').textContent = n.title;
+
+  const saved = state.checks[id] || [];
+  const promptHtml = esc(n.prompt).replace(/\[([^\]]+)\]/g, '<span class="ph">[$1]</span>');
+
+  document.getElementById('pBody').innerHTML = `
+    <h3>La leçon</h3>
+    <div class="lesson">${n.lesson}</div>
+    <h3>Mission dans Claude</h3>
+    <div class="mission">
+      <ol class="mission-steps">${n.steps.map(s => `<li>${s}</li>`).join('')}</ol>
+      <div class="promptbox">${promptHtml}</div>
+      <button class="btn btn-violet" id="copyMission">⧉ Copier le prompt de mission</button>
+    </div>
+    <h3>Validation</h3>
+    <div class="checks">
+      ${n.checks.map((c, i) => `
+        <label class="check"><input type="checkbox" data-i="${i}" ${saved.includes(i) || done ? 'checked' : ''} ${done ? 'disabled' : ''}/><span>${c}</span></label>`).join('')}
+    </div>
+    ${done
+      ? `<div class="done-note">✓ Mission accomplie — étoile allumée (+${XP_NODE} XP)</div>`
+      : `<button class="btn btn-violet complete-btn" id="completeBtn" disabled>Mission accomplie → allumer l’étoile</button>`}
+  `;
+
+  document.getElementById('copyMission').addEventListener('click', () =>
+    copyText(n.prompt, 'Mission copiée — à coller dans <b>Claude</b>. Remplacez les <b>[crochets]</b> !'));
+
+  if (!done) {
+    const boxes = [...document.querySelectorAll('#pBody .check input')];
+    const btn = document.getElementById('completeBtn');
+    const sync = () => {
+      const on = boxes.filter(b => b.checked).map(b => +b.dataset.i);
+      state.checks[id] = on; save();
+      btn.disabled = on.length !== n.checks.length;
+    };
+    boxes.forEach(b => b.addEventListener('change', sync));
+    sync();
+    btn.addEventListener('click', () => {
+      state.done.push(id); save();
+      renderSky(); renderHud(); closePanel();
+      toast(`✨ <b>${n.title}</b> validée · +${XP_NODE} XP`);
+    });
+  }
+  panel.classList.add('open'); scrim.classList.add('open');
+}
+function closePanel() { panel.classList.remove('open'); scrim.classList.remove('open'); }
+document.getElementById('pClose').addEventListener('click', closePanel);
+scrim.addEventListener('click', closePanel);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePanel(); });
+
+/* ── forge ── */
+function fieldHtml(c, f) {
+  if (f.type === 'select') return `<select id="${c.id}-${f.key}">${f.options.map(([v, l]) => `<option value="${v}">${esc(l)}</option>`).join('')}</select>`;
+  if (f.type === 'textarea') return `<textarea id="${c.id}-${f.key}" placeholder="${esc(f.ph || '')}"></textarea>`;
+  return `<input id="${c.id}-${f.key}" type="text" placeholder="${esc(f.ph || '')}" />`;
+}
+function renderForge() {
+  const root = document.getElementById('forgeRoot');
+  root.innerHTML = '';
+  const groups = [
+    ['artefact', "Forges d'artefacts", 'de vrais fichiers et configs, règles du Codex appliquées et validées'],
+    ['prompt', 'Forges de prompts', 'des prompts experts à coller dans Claude ou Claude Code'],
+  ];
+  groups.forEach(([cat, title, sub]) => {
+    const h = document.createElement('div');
+    h.className = 'forge-h2';
+    h.innerHTML = `<h2>${cat === 'artefact' ? '🛠' : '⚒'} ${title}</h2><small>${sub}</small>`;
+    root.appendChild(h);
+    const grid = document.createElement('div');
+    grid.className = 'forge-grid';
+    COMMANDS.filter(c => (c.cat || 'prompt') === cat).forEach(c => {
+      const used = state.used.includes(c.id);
+      const card = document.createElement('div');
+      card.className = 'cmd';
+      card.innerHTML = `
+        <div class="cmd-head">
+          <span class="cmd-name">${c.name}${c.cc ? ' <span class="tag" style="font-size:8.5px;letter-spacing:0.1em;border:1px solid var(--line);border-radius:99px;padding:2px 7px;color:var(--txt3);vertical-align:3px">CC</span>' : ''}</span>
+          <span class="cmd-badge ${used ? 'used' : ''}">${used ? '✓ utilisée' : '+' + XP_CMD + ' xp'}</span>
+        </div>
+        <p>${c.desc}</p>
+        ${c.fields.map(f => `<div><label for="${c.id}-${f.key}">${f.label}</label>${fieldHtml(c, f)}</div>`).join('')}
+        <button class="btn btn-amber">⚒ Forger</button>
+        <div class="cmd-out" id="${c.id}-out"></div>`;
+      card.querySelector('button.btn-amber').addEventListener('click', () => {
+        const vals = {};
+        c.fields.forEach(f => { vals[f.key] = document.getElementById(`${c.id}-${f.key}`).value.trim(); });
+        const content = c.build(vals);
+        const out = document.getElementById(`${c.id}-out`);
+        const checks = c.check ? c.check(vals) : [];
+        const allOk = checks.every(x => x.ok);
+        out.innerHTML = `
+          ${checks.length ? `<div class="vlist">${checks.map(x => `<div class="${x.ok ? 'v-ok' : 'v-bad'}"><span>${x.ok ? '✓' : '✕'}</span><span>${x.msg}</span></div>`).join('')}</div>` : ''}
+          <div class="promptbox" style="max-height:300px">${esc(content).replace(/\[([^\]\n]{1,80})\]/g, '<span class="ph">[$1]</span>')}</div>
+          <button class="btn ${c.cat === 'artefact' ? 'btn-violet' : 'btn-amber'}" style="width:100%">⧉ Copier ${c.cat === 'artefact' ? "l'artefact" : 'le prompt'}</button>
+          ${c.learn ? `<div><div class="learn-k">Ce que cette forge vous apprend</div><ul class="learnlist">${c.learn.map(l => `<li>${l}</li>`).join('')}</ul></div>` : ''}`;
+        out.classList.add('show');
+        out.querySelector('button').addEventListener('click', () =>
+          copyText(content, `<b>${c.name}</b> copié${allOk ? '' : ' (⚠ corrigez les points en rouge avant usage)'} !`));
+        if (!state.used.includes(c.id)) { state.used.push(c.id); save(); renderHud();
+          card.querySelector('.cmd-badge').className = 'cmd-badge used';
+          card.querySelector('.cmd-badge').textContent = '✓ utilisée'; }
+      });
+      grid.appendChild(card);
+    });
+    root.appendChild(grid);
+  });
+}
+
+/* ── dojo ── */
+const plainText = s => { const d = document.createElement('div'); d.innerHTML = s; return d.textContent || ''; };
+let dojo = null;
+function dojoPool(sectionId) {
+  const secs = CODEX.filter(s => sectionId === 'all' || s.id === sectionId);
+  const pool = [];
+  secs.forEach(s => s.entries.forEach(e => pool.push({ s, e })));
+  return pool;
+}
+function makeQuestion(pool) {
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+  const item = pick(pool);
+  const sameSec = pool.filter(x => x.s.id === item.s.id && x.e !== item.e);
+  const distractors = [];
+  const src = sameSec.length >= 3 ? sameSec : pool.filter(x => x.e !== item.e);
+  while (distractors.length < 3 && src.length) {
+    const d = pick(src);
+    if (!distractors.includes(d) && d.e !== item.e) distractors.push(d);
+  }
+  const nameToDesc = Math.random() < 0.45;
+  const trunc = (t, n) => { t = plainText(t); return t.length > n ? t.slice(0, n - 1) + '…' : t; };
+  if (nameToDesc) {
+    return {
+      kicker: item.s.title,
+      text: `Que fait <code>${esc(item.e.name)}</code> ?`,
+      answers: [item, ...distractors].map(x => ({ label: trunc(x.e.desc, 150), good: x === item })),
+      note: `<b style="color:var(--txt)">${esc(item.e.name)}</b> — ${plainText(item.e.desc)}`,
+    };
+  }
+  return {
+    kicker: item.s.title,
+    text: `« ${esc(trunc(item.e.desc, 170))} » — de quoi parle-t-on ?`,
+    answers: [item, ...distractors].map(x => ({ label: trunc(x.e.name, 80), good: x === item })),
+    note: `<b style="color:var(--txt)">${esc(item.e.name)}</b> — ${plainText(item.e.desc)}`,
+  };
+}
+function startDojo(sectionId) {
+  const pool = dojoPool(sectionId);
+  const qs = [];
+  for (let i = 0; i < 10; i++) qs.push(makeQuestion(pool));
+  dojo = { qs, i: 0, score: 0, streak: 0, best: 0, section: sectionId };
+  renderDojoQuestion();
+}
+function renderDojoSetup() {
+  const root = document.getElementById('dojoRoot');
+  document.getElementById('dojoCap').textContent = DOJO_CAP;
+  root.innerHTML = `
+    <div class="dojo-setup">
+      <div>
+        <div class="learn-k" style="margin-bottom:8px">Choisissez votre domaine</div>
+        <div class="dojo-domains">
+          <button class="cchip active" data-d="all">Tout le Codex<span class="n">${CODEX.reduce((s, x) => s + x.entries.length, 0)}</span></button>
+          ${CODEX.map(s => `<button class="cchip" data-d="${s.id}">${s.short}<span class="n">${s.entries.length}</span></button>`).join('')}
+        </div>
+      </div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--txt3)">XP Dojo : ${Math.min(state.dojoXp || 0, DOJO_CAP)} / ${DOJO_CAP}</div>
+      <button class="btn btn-rose" style="align-self:flex-start;padding:13px 26px" id="dojoStart">◉ Lancer une série de 10</button>
+    </div>`;
+  let domain = 'all';
+  root.querySelectorAll('.cchip').forEach(b => b.addEventListener('click', () => {
+    domain = b.dataset.d;
+    root.querySelectorAll('.cchip').forEach(x => x.classList.toggle('active', x === b));
+  }));
+  document.getElementById('dojoStart').addEventListener('click', () => startDojo(domain));
+}
+function renderDojoQuestion() {
+  const root = document.getElementById('dojoRoot');
+  if (dojo.i >= dojo.qs.length) {
+    const gained = dojo.score;
+    const before = Math.min(state.dojoXp || 0, DOJO_CAP);
+    state.dojoXp = (state.dojoXp || 0) + gained; save(); renderHud();
+    const capped = Math.min(state.dojoXp, DOJO_CAP) - before;
+    root.innerHTML = `
+      <div class="dojo-card dojo-end">
+        <div class="big">${dojo.score}/10</div>
+        <p style="color:var(--txt2);font-size:14px;margin:8px 0 4px">${dojo.score >= 9 ? 'Réflexes d’expert — le Codex est dans vos doigts.' : dojo.score >= 6 ? 'Solide. Encore quelques séries et ce sera automatique.' : 'Le Codex est ouvert à côté — refaites une série sur le même domaine.'}</p>
+        <p style="font-family:var(--mono);font-size:11px;color:var(--txt3)">meilleure série : ${dojo.best} d'affilée · +${capped} XP</p>
+        <div style="display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap">
+          <button class="btn btn-rose" id="dojoAgain">Rejouer ce domaine</button>
+          <button class="btn btn-ghost" id="dojoBack" style="background:rgba(255,255,255,0.06);color:var(--txt2);border:1px solid var(--line)">Changer de domaine</button>
+        </div>
+      </div>`;
+    document.getElementById('dojoAgain').addEventListener('click', () => startDojo(dojo.section));
+    document.getElementById('dojoBack').addEventListener('click', renderDojoSetup);
+    return;
+  }
+  const q = dojo.qs[dojo.i];
+  root.innerHTML = `
+    <div class="dojo-card">
+      <div class="dojo-meta">
+        <span>question ${dojo.i + 1} / ${dojo.qs.length}</span>
+        <span>score ${dojo.score}${dojo.streak >= 2 ? ` <span class="streak">· ${dojo.streak} d'affilée 🔥</span>` : ''}</span>
+      </div>
+      <div class="dojo-q"><span class="qk">${esc(q.kicker)}</span>${q.text}</div>
+      <div class="dojo-answers">
+        ${q.answers.map((a, i) => `<button class="dojo-ans" data-i="${i}">${esc(a.label)}</button>`).join('')}
+      </div>
+      <div id="dojoNote"></div>
+    </div>`;
+  // mélange visuel des réponses
+  const wrap = root.querySelector('.dojo-answers');
+  [...wrap.children].sort(() => Math.random() - 0.5).forEach(b => wrap.appendChild(b));
+  wrap.querySelectorAll('.dojo-ans').forEach(btn => btn.addEventListener('click', () => {
+    const a = q.answers[+btn.dataset.i];
+    wrap.querySelectorAll('.dojo-ans').forEach(b => {
+      b.disabled = true;
+      if (q.answers[+b.dataset.i].good) b.classList.add('good');
+    });
+    if (a.good) { dojo.score++; dojo.streak++; dojo.best = Math.max(dojo.best, dojo.streak); }
+    else { btn.classList.add('bad'); dojo.streak = 0; }
+    document.getElementById('dojoNote').innerHTML = `
+      <div class="dojo-note">${a.good ? '✓ Exact. ' : '✕ '} ${q.note}</div>
+      <button class="btn btn-rose" style="margin-top:12px" id="dojoNext">${dojo.i + 1 < dojo.qs.length ? 'Question suivante →' : 'Voir le score'}</button>`;
+    document.getElementById('dojoNext').addEventListener('click', () => { dojo.i++; renderDojoQuestion(); });
+  }));
+}
+
+/* ── codex ── */
+let codexFilter = 'all';
+function renderCodexChips() {
+  const el = document.getElementById('codexChips');
+  const total = CODEX.reduce((s, x) => s + x.entries.length, 0);
+  el.innerHTML = `<button class="cchip ${codexFilter === 'all' ? 'active' : ''}" data-id="all">Tout<span class="n">${total}</span></button>` +
+    CODEX.map(s => `<button class="cchip ${codexFilter === s.id ? 'active' : ''}" data-id="${s.id}">${s.short}<span class="n">${s.entries.length}</span></button>`).join('');
+  el.querySelectorAll('.cchip').forEach(b => b.addEventListener('click', () => {
+    codexFilter = b.dataset.id; renderCodexChips(); applyCodexFilter();
+  }));
+}
+function renderCodex() {
+  const root = document.getElementById('codexSections');
+  root.innerHTML = '';
+  CODEX.forEach(s => {
+    const sec = document.createElement('div');
+    sec.className = 'codex-section';
+    sec.dataset.id = s.id;
+    sec.innerHTML = `
+      <div class="cs-head">
+        <div class="cs-ico" style="color:${s.color}">${s.icon}</div>
+        <h2>${s.title}<small>${s.sub}</small></h2>
+        <span class="cs-count">${s.entries.length}</span>
+        <span class="cs-arrow">▶</span>
+      </div>
+      <div class="cs-body">
+        ${s.intro ? `<div class="cs-intro">${s.intro}</div>` : ''}
+        <div class="entries">
+          ${s.entries.map(e => `
+            <div class="entry" data-search="${esc((e.name + ' ' + e.desc + ' ' + (e.note || '') + ' ' + (e.tags || []).join(' ')).toLowerCase())}">
+              <div class="entry-name" style="color:${s.color}">${esc(e.name)}${(e.tags || []).map(t => `<span class="tag">${t}</span>`).join('')}</div>
+              <div class="entry-desc">${e.desc}</div>
+              ${e.note ? `<div class="entry-note">${e.note}</div>` : ''}
+            </div>`).join('')}
+        </div>
+      </div>`;
+    sec.querySelector('.cs-head').addEventListener('click', () => sec.classList.toggle('open'));
+    root.appendChild(sec);
+  });
+  applyCodexFilter();
+}
+function applyCodexFilter() {
+  const q = document.getElementById('codexSearch').value.trim().toLowerCase();
+  let visible = 0;
+  document.querySelectorAll('.codex-section').forEach(sec => {
+    const inFilter = codexFilter === 'all' || sec.dataset.id === codexFilter;
+    let secCount = 0;
+    sec.querySelectorAll('.entry').forEach(en => {
+      const hit = !q || en.dataset.search.includes(q);
+      en.classList.toggle('hidden', !hit);
+      if (hit) secCount++;
+    });
+    const show = inFilter && secCount > 0;
+    sec.style.display = show ? '' : 'none';
+    if (show) visible += secCount;
+    if (q && show) sec.classList.add('open');
+    sec.querySelector('.cs-count').textContent = secCount;
+  });
+  document.getElementById('codexCount').textContent = `${visible} entrées`;
+}
+document.getElementById('codexSearch').addEventListener('input', applyCodexFilter);
+
+/* ── tabs ── */
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x === t));
+  ['sky', 'forge', 'codex', 'dojo'].forEach(v => { document.getElementById('view-' + v).hidden = t.dataset.tab !== v; });
+  if (t.dataset.tab === 'dojo' && !dojo) renderDojoSetup();
+}));
+
+/* ── reset ── */
+document.getElementById('resetBtn').addEventListener('click', () => {
+  if (confirm('Effacer toute votre progression VibeLab sur ce navigateur ?')) {
+    state = { done: [], used: [], checks: {}, dojoXp: 0 }; save();
+    dojo = null;
+    renderSky(); renderHud(); renderForge(); renderDojoSetup();
+    toast('Progression réinitialisée — nouvelle constellation ✨');
+  }
+});
+
+renderSky(); renderHud(); renderForge(); renderCodexChips(); renderCodex(); renderDojoSetup();
+</script>
+</body>
+</html>
